@@ -1,36 +1,36 @@
 # WorkBuddy2API-Hub — 国际版、国内版多账号网关中枢
 
-> [!CAUTION]
-> **项目停止维护（2026-11-06）**：后续不再更新代码、不跟进上游变化、不再处理新的 issue / PR。感谢大家的 star。
-
 > [!IMPORTANT]
-> **项目进入低频维护（2026-10-23） / Low-frequency maintenance**
+> **本仓库为自用维护分支（fork）/ Self-maintained fork**
 >
-> 大幅降低更新频率与 Issue / PR 处理速度。请先阅读风险说明，再决定是否继续使用。
+> 上游 [ardeyouxipianyi/workbuddy2api-hub](https://github.com/ardeyouxipianyi/workbuddy2api-hub) 已于 2026-11-06 宣布停止维护，本仓库是为个人自用而 fork 的维护分支：只保证自己那套部署（Termux / Android 手机端为主）跑得起来。
 >
-> Updates and responses to issues / pull requests will be significantly reduced. Read the risk notice below before continuing.
+> - **不做兼容性承诺**：改什么、什么时候改，以自用需要为准，可能随时破坏旧配置或旧接口；
+> - **版本号同样是自用的**：当前自用版本见下方徽章与 [`docs/CHANGELOG.md`](docs/CHANGELOG.md)；
+> - **维护方式**：测试门禁、上游同步与发版流程见 [`MAINTENANCE.md`](MAINTENANCE.md)。
+>
+> This is a personal fork for self-hosting. The upstream project stopped maintenance on 2026-11-06. There is no compatibility promise and no support. See `MAINTENANCE.md`.
 
 > [!WARNING]
 > **WorkBuddy 上游正在收紧对非官方客户端的识别与拦截。**
 >
 > - **封禁**：2026-10-23 下午起，非官方客户端的识别与拦截明显收紧。
-> - **维护者**：近期工作压力增大，无法保证及时更新与响应。
 > - **可用性**：上游可能随时进一步收紧，导致本项目不可用。
 > - **账号风险**：使用非官方客户端造成的风控、限流或封禁，由使用者自行承担。
 >
-> **Upstream enforcement** tightened detection and blocking of unofficial clients from the afternoon of 2026-10-23. The maintainer is under increased workload and cannot guarantee timely updates or replies. The upstream may tighten further at any time; rate limits, account restrictions or bans caused by using an unofficial client are the user's responsibility.
+> **Upstream enforcement** tightened detection and blocking of unofficial clients from the afternoon of 2026-10-23. This fork is maintained on a best-effort, self-use basis. The upstream may tighten further at any time; rate limits, account restrictions or bans caused by using an unofficial client are the user's responsibility.
 
 本项目仅用于协议学习、研究与个人自用。请优先使用官方客户端，不要使用主账号，不要共享账号，也不要用于商业转售。
 
 This project is for protocol research and personal use only. Prefer the official client, do not use your primary account, and do not resell or share access.
 
 <p align="center">
-  <a href="https://github.com/ardeyouxipianyi/workbuddy2api-hub/releases"><img src="https://img.shields.io/badge/Release-v2.0.0-2496ED?style=flat-square" alt="Version 2.0.0"></a>
+  <a href="https://github.com/TemplarsCreed/workbuddy2api-hub/releases"><img src="https://img.shields.io/badge/Release-v2.0.1-2496ED?style=flat-square" alt="Version 2.0.1"></a>
   <img src="https://img.shields.io/badge/Python-3.9+-blue.svg?style=flat-square" alt="Python">
   <img src="https://img.shields.io/badge/API-OpenAI_Compatible-412991?style=flat-square" alt="OpenAI API">
   <img src="https://img.shields.io/badge/Dual_Realm-Intl_&_CN-0DBD8B?style=flat-square" alt="Dual Realm">
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/Maintenance-Ended-9f2d2d?style=flat-square" alt="Maintenance ended">
+  <img src="https://img.shields.io/badge/Maintenance-Self_Use-0DBD8B?style=flat-square" alt="Self-use fork">
 </p>
 
 ## 核心特性
@@ -43,23 +43,7 @@ This project is for protocol research and personal use only. Prefer the official
 
 > ⚡ **Vibe Coding 产物**：本项目为 100% Vibe Coding 协同产物——人类开发者提出架构与业务意图，AI 助手端到端完成逆向分析、链路调度、WAF 指纹脱敏与界面编写。
 
-> 📌 **提交代码贡献前**：请先查看并**严格遵循**贡献手册 [`CONTRIBUTING.md`](CONTRIBUTING.md)——提交格式、测试门禁与端到端冒烟要求都在那里（AI / 智能体请特别注意其中的硬性规则节）。
-
----
-
-## 💖 赞助商
-
-> 想出现在这里？联系 [ardeyouxipianyi@gmail.com](mailto:ardeyouxipianyi@gmail.com)
-
-<table>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://agentrouter.org/register?aff=unrV"><img src="https://raw.githubusercontent.com/88lin/picx-images-hosting/master/90C5FAD072EA247822CB88BB32512A41.webp" alt="Agent Router" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://agentrouter.org/register?aff=unrV">Agent Router</a></b>&nbsp;是免费公益大模型 API 平台，支持 Claude-opus-5.5、GPT-6 Astra、GPT-6.1 Sol、deepseek-v4-flash 等主流模型，国内直连。注册送 ＄175（每日签到得 ＄25，被邀得 ＄50），支持 GitHub / LinuxDo 登录。</td>
-</tr>
-</table>
-
+> 📌 **自行改动前**：请先查看 [`CONTRIBUTING.md`](CONTRIBUTING.md)——提交格式、测试门禁与端到端冒烟要求都在那里（AI / 智能体请特别注意其中的硬性规则节）。
 
 ---
 
@@ -76,16 +60,16 @@ This project is for protocol research and personal use only. Prefer the official
 
 ### 2. Docker 部署
 
-预编译多架构镜像发布在 GHCR，无需本地构建：
+预编译多架构镜像发布在本分支的 GHCR（`ghcr.io/templarscreed/workbuddy2api-hub`），通常无需本地构建；若拉取失败或想固定版本，可用 `docker-compose.build.yml` 本地构建。
 
 **方式一：一键脚本（推荐）**
 
 ```bash
 # 官方源（直连 GitHub 环境）：
-curl -fsSL https://raw.githubusercontent.com/ardeyouxipianyi/workbuddy2api-hub/main/quick-deploy.sh | bash
+curl -fsSL https://raw.githubusercontent.com/TemplarsCreed/workbuddy2api-hub/main/quick-deploy.sh | bash
 
 # 国内网络 / NAS 加速：
-curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/ardeyouxipianyi/workbuddy2api-hub/main/quick-deploy.sh | sudo bash
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/TemplarsCreed/workbuddy2api-hub/main/quick-deploy.sh | sudo bash
 ```
 
 > 公网部署或配合反向代理：在管道前指定 `WB_DEPLOY_MODE=public bash`，并搭配 Nginx / Caddy / Cloudflare Tunnel 配置 TLS。
@@ -95,7 +79,7 @@ curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/ardeyouxipiany
 ```yaml
 services:
   wb-proxy:
-    image: ghcr.io/ardeyouxipianyi/workbuddy2api-hub:latest
+    image: ghcr.io/templarscreed/workbuddy2api-hub:latest
     container_name: wb-proxy
     restart: unless-stopped
     ports:
@@ -232,6 +216,7 @@ python tests/run_all.py realm      # 只跑名字里含 realm 的
 
 ### Unreleased
 
+- **README 改成自用维护口径**：顶部「项目停止维护 / 低频维护」声明换成自用维护分支说明（不做兼容承诺、维护方式见 `MAINTENANCE.md`），并删掉赞助商广告位与 Star 趋势图；版本徽章更新到 v2.0.1，一键部署脚本、Docker 镜像与 Release 链接改指本分支。
 - **网关默认出口改为下拉直选**：网关页「默认出口」卡片上的「⇄ 切换默认出口为【X】」轮转按钮换成下拉列表，选中哪个就切到哪个并立即保存；三个出口（国际版 / 国内版 / CodeArts）时一次点选即可，不用点两次才轮到 CodeArts。选项仍按服务端 `/realm` 返回的 `options` 生成（CodeArts 未配置时只有两项），重复选中当前出口或非法值不提交，只把下拉回显拨回来。
 - **用量聚合缓存跳过写盘时不再静默停更**：checkpoint 写盘因状态锁被占、状态暂不可序列化或写入异常而跳过时，按类节流告警并登记后台异步补写（30 秒起指数退避，封顶 15 分钟）；补写成功立即取消，失败继续重试。新增 64MB checkpoint 落后告警、蓝绿双进程临时文件隔离，避免 `remaining` 一类缓存连续多日不落盘、重启后反复全量重折。
 - **设置页分组在正體中文 / 英文界面不再整页空白**：分组胶囊靠各区块的 `h2` 标题文字比对归类，界面语言切到正體中文或英文后标题已被 i18n 换掉，比对全部落空、每个区块都归到「日志与系统」，于是点「基础 / 自动化 / 稳定性」时把整页 section 全部 hidden（看起来设置页清空）。现在改用 i18n 翻译前保留的原文比对，三种语言的分组结果一致；另补上漏归的「选择网页活跃提示词」（原来被归到「日志与系统」）。
@@ -290,11 +275,3 @@ python tests/run_all.py realm      # 只跑名字里含 realm 的
 ## 九、免责声明 (Disclaimer)
 
 本项目仅用于协议学习与个人开发测试，不提供任何商业服务或可用性担保。因使用非官方客户端产生的账号风控、限制或封禁由使用者自行承担，请优先使用官方客户端。
-
-## ⭐ Star 趋势
-
-<p align="center">
-  <a href="https://star-history.com/#ardeyouxipianyi/workbuddy2api-hub&Date">
-    <img src="https://api.star-history.com/svg?repos=ardeyouxipianyi/workbuddy2api-hub&type=Date" alt="Star History Chart" width="760">
-  </a>
-</p>

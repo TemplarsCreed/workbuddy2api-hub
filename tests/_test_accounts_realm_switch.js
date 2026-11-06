@@ -66,6 +66,17 @@ assert.ok(/rsCa\.classList\.toggle\("active", isCodeartsView\)/.test(script),
 assert.ok(/const realmSwitch = document\.getElementById\('accountsRealmSwitch'\);/.test(script),
   'applyAccountsTabLayout 应负责把控件搬到位');
 
+// 网关页「网关默认出口」卡片：下拉直选。轮转按钮（点一次走下一个出口）已经删掉，
+// 三个出口时它要点两次才到 CodeArts，且切到哪一个是顺手点出来的而不是选出来的。
+assert.ok(html.indexOf('id="realmPicker"') > 0,
+  '网关默认出口应有一个下拉（#realmPicker）');
+assert.ok(html.indexOf('id="btnToggleRealm"') < 0,
+  '「⇄ 切换默认出口为【X】」轮转按钮应当已经删除');
+assert.ok(/<select id="realmPicker"[^>]*onchange="setActiveGatewayRealm\(this\.value\)"/.test(html),
+  '下拉的 onchange 应直连 setActiveGatewayRealm(this.value)');
+assert.ok(!/\(gwIdx \+ 1\) % gwOptions\.length/.test(script),
+  '不该再按 (idx + 1) 轮转出口');
+
 // 英文词条：aria-label 也在被翻译的属性里，缺了就会漏出中文
 for(const [zh, en] of [['版本视图', 'Realm view'],
                        ['国际版', 'Global'],
@@ -122,7 +133,8 @@ try {
     return {
       updateUI: updateUI,
       switchViewRealm: switchViewRealm,
-      toggleActiveGatewayRealm: toggleActiveGatewayRealm,
+      setActiveGatewayRealm: setActiveGatewayRealm,
+      syncRealmPicker: syncRealmPicker,
       applyAccountsTabLayout: applyAccountsTabLayout,
       view: () => window.VIEW_REALM,
       active: () => window.ACTIVE_GATEWAY_REALM,
@@ -188,21 +200,41 @@ const indexIn = (parent, el) => parent.children.indexOf(el);
   await api.switchViewRealm('intl');
   assert.equal(api.view(), 'intl', '重复点当前版本应保持不动');
 
-  // 2f. 从网关页改默认出口：视图与两边控件同样要跟上（反向同步）
+  // 2f. 从网关页改默认出口：直接选目标出口，视图与两边控件同样要跟上（反向同步）
   realmState.current = 'intl';
   api.applyAccountsTabLayout(true);
   window.ACTIVE_GATEWAY_REALM = 'intl';
   window.VIEW_REALM = 'intl';
   api.updateUI();
   POSTS = [];
-  await api.toggleActiveGatewayRealm();
+  await api.setActiveGatewayRealm('cn');
   assert.equal(api.active(), 'cn', '默认出口应切到国内版');
   assert.equal(POSTS.length, 1, '应只提交一次 /realm');
   assert.ok(/^\/realm/.test(POSTS[0].url), '切换默认出口应打 /realm');
+  assert.equal(JSON.parse(POSTS[0].body).realm, 'cn', '提交的应是下拉里选中的那个出口');
   assert.equal(api.view(), 'cn', '默认出口切换后视图跟到国内版');
   assert.ok(activeOf(byId('accountsRealmCn')), '账号页控件应跟上默认出口的切换');
   assert.equal(byId('tabCnDefaultBadge').style.display, 'inline-block',
     '网关页「默认出口」标记应落在国内版');
+  assert.equal(byId('realmPicker').value, 'cn', '下拉应回显刚切过去的出口');
+
+  // 2f2. 同值再选一次不提交：下拉的 change 只在真变了时触发，重复设置得自己挡住
+  POSTS = [];
+  await api.setActiveGatewayRealm('cn');
+  assert.equal(POSTS.length, 0, '选中当前出口不应再发 /realm');
+
+  // 2f3. 三个出口时能一步直选最后一个（轮转要点两次），选项跟着 /realm 的 options 走
+  window.REALM_OPTIONS = ['intl', 'cn', 'codearts'];
+  realmState.current = 'intl';
+  window.ACTIVE_GATEWAY_REALM = 'intl';
+  api.updateUI();
+  assert.ok(byId('realmPicker').innerHTML.includes('value="codearts"'),
+    'CodeArts 启用后下拉应有第三项');
+  POSTS = [];
+  await api.setActiveGatewayRealm('codearts');
+  assert.equal(api.active(), 'codearts', '应能一步选到 CodeArts，不必先绕国内版');
+  assert.equal(POSTS.length, 1, '直选也应只提交一次 /realm');
+  assert.equal(JSON.parse(POSTS[0].body).realm, 'codearts', '提交的应是 CodeArts');
 
   // 2g. 控件只切视图，不该偷偷改默认出口
   realmState.current = 'intl';

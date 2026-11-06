@@ -10,7 +10,7 @@
      4. 空状态与计数出自同一份过滤后的数据（另一侧有停用项也一样）；
      5. 每一行的类型/原因/恢复时间与改动前一致，正常账号不出现；
      6. 全页只允许存在一处 realm 过滤表达式，两个消费者共用它；
-     7. 真实的切换函数（switchViewRealm / toggleActiveGatewayRealm）在异步账号
+     7. 真实的切换函数（switchViewRealm / setActiveGatewayRealm）在异步账号
         重载**挂起或失败**时，也立刻把上一个 realm 的行清掉 —— 重画用的是已经
         加载好的全量 window.ACCOUNTS，不等重载。
 
@@ -63,7 +63,7 @@ const api = new Function(script + `
     disabledRows,
     accountsInView,
     switchViewRealm,
-    toggleActiveGatewayRealm,
+    setActiveGatewayRealm,
     setAccounts: list => { window.ACCOUNTS = list; },
     setView: view => { window.VIEW_REALM = view; },
     view: () => window.VIEW_REALM,
@@ -213,7 +213,7 @@ assert.deepEqual(api.accountsInView().map(a => a.uid),
   await failing.catch(() => {});
   cnOnScreen('failing reload, after it settled');
 
-  // 8c. toggleActiveGatewayRealm() is the other path that moves VIEW_REALM. Its
+  // 8c. setActiveGatewayRealm() is the other path that moves VIEW_REALM. Its
   //     account reload is still outstanding when the view flips, so the repaint
   //     can only have come from the already-loaded list.
   accountsReply = 'pending';
@@ -221,14 +221,14 @@ assert.deepEqual(api.accountsInView().map(a => a.uid),
   realmReply = 'cn';
   api.setGatewayRealm('intl');
   armSwitch();
-  const toggling = api.toggleActiveGatewayRealm();
-  toggling.catch(() => {});
+  const switching = api.setActiveGatewayRealm('cn');
+  switching.catch(() => {});
   for(let spins = 0; api.view() !== 'cn' && spins < 50; spins++){
     await new Promise(resolve => setImmediate(resolve));
   }
-  assert.equal(api.view(), 'cn', 'toggleActiveGatewayRealm must move the view');
+  assert.equal(api.view(), 'cn', 'setActiveGatewayRealm must move the view');
   assert.equal(accountsRequests, 1, 'its account reload is still outstanding');
-  cnOnScreen('toggle path, reload outstanding');
+  cnOnScreen('switch path, reload outstanding');
 
   console.log('disabled summary realm isolation assertions passed');
 })().catch(error => { console.error(error); process.exit(1); });

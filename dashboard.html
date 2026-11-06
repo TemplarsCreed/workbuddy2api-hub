@@ -549,12 +549,6 @@ a:hover{text-decoration:underline}
   background:var(--panel2);cursor:default;border-color:var(--line);
 }
 .realm-card.gateway-ctrl:hover{transform:none;border-color:var(--line);box-shadow:var(--shadow)}
-.toggle-realm-btn{
-  background:var(--panel);border:1px solid var(--accent);color:var(--accent);
-  padding:8px 18px;font-size:13px;font-weight:600;border-radius:8px;box-shadow:var(--shadow-sm);cursor:pointer;
-  transition:all .15s ease;
-}
-.toggle-realm-btn:hover{background:var(--panel2);box-shadow:var(--shadow-md)}
 .realm-endpoint-info{font-size:12px;color:var(--dim)}
 
 .main-nav{display:inline-flex;gap:4px;background:var(--panel2);padding:4px;border-radius:10px;border:1px solid var(--line)}
@@ -1423,11 +1417,6 @@ button.sec:hover{background:var(--panel2);border-color:var(--line-hover)}
 button.mini{padding:4px 9px;font-size:11px}
 button.danger{background:var(--bad-soft);border-color:transparent;color:var(--bad)}
 button.danger:hover{background:var(--bad);border-color:var(--bad);color:#fff}
-.toggle-realm-btn{
-  background:var(--panel);border-color:var(--line);color:var(--fg);
-  box-shadow:none;border-radius:7px;
-}
-.toggle-realm-btn:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .id-btn.active{background:var(--accent);color:#fff;box-shadow:none}
 .id-btn-group{border-radius:6px}
 .realm-switch button.active#accountsRealmCn{color:var(--think);border-color:var(--think)}
@@ -2110,7 +2099,6 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '· 已筛选': '· filtered',
     '· 积分明细': '· credit details',
     '· 耗时': '· duration',
-    '⇄ 切换默认出口为【国内版】': '⇄ Switch the default exit to China',
     '。名字带渠道后缀（如': '. Names carrying a channel suffix (such as',
     '。没人引用、又已经不作数的策略会被清掉（每个模型至少留一条，刚取到的那批不动）。取价间隔以': '. Policies nobody references and that are no longer valid get cleaned up (every model keeps at least one, and the batch just fetched is left alone). The fetch interval is counted in',
     '「绑定账号」只统计已启用账号；停用账号会自动释放槽位，重新启用后需重新绑定。在网关页账号表的「出口」下拉中调整绑定。名称留空时按出口自动显示「国家 类型」，点「测试」会补全出口信息并据此命名。': 'Bound accounts counts enabled accounts only; disabling an account releases its slot automatically and you must bind it again after re-enabling. Adjust the binding in the Exit dropdown of the account table on the gateway page. With an empty name the slot shows Country Type from the exit; clicking Test fills in the exit info and names the slot accordingly.',
@@ -2235,8 +2223,6 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '新导航布局': 'New navigation layout',
     '返回原布局': 'Return to previous layout',
     '切换颜色主题': 'Switch color theme',
-    '切换默认出口为【国内版】': 'Switch the default exit to China',
-    '切换默认出口为【国际版】': 'Switch the default exit to Global',
     '列表，点击上方选项卡即可查看': 'list; click the tab above to view it',
     '刚刚': 'just now',
     '创建': 'Created',
@@ -3530,7 +3516,6 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     "] 已启用": "] 已啟用",
     "· 周期已过": "· 週期已過",
     "—（需手动启用）": "—（需手動啟用）",
-    "⇄ 切换默认出口为【国内版】": "⇄ 切換預設出口為【國內版】",
     "。名字带渠道后缀（如": "。名字帶渠道字尾（如",
     "「上游限流」到点自动恢复；「本地停用」需手动启用；「日限额」次日零点恢复": "「上游限流」到點自動恢復；「本地停用」需手動啟用；「日限額」次日零點恢復",
     "「绑定账号」只统计已启用账号；停用账号会自动释放槽位，重新启用后需重新绑定。在网关页账号表的「出口」下拉中调整绑定。名称留空时按出口自动显示「国家 类型」，点「测试」会补全出口信息并据此命名。": "「繫結帳號」只統計已啟用帳號；停用帳號會自動釋放槽位，重新啟用後需重新繫結。在閘道頁帳號表的「出口」下拉中調整繫結。名稱留空時按出口自動顯示「國家 型別」，點「測試」會補全出口資訊並據此命名。",
@@ -3590,8 +3575,6 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     "分钟": "分鐘",
     "分钟)": "分鐘)",
     "分钟取一次价": "分鐘取一次價",
-    "切换默认出口为【国内版】": "切換預設出口為【國內版】",
-    "切换默认出口为【国际版】": "切換預設出口為【國際版】",
     "列表，点击上方选项卡即可查看": "列表，點選上方選項卡即可檢視",
     "创建": "建立",
     "创建 ' + esc(k.created_at) + '": "建立 ' + esc(k.created_at) + '",
@@ -5395,9 +5378,14 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
         <span id="activeGatewayName" style="font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.4px">国际版 (Global)</span>
       </div>
       <div style="margin-top:auto">
-        <button class="toggle-realm-btn" id="btnToggleRealm" onclick="toggleActiveGatewayRealm()" style="cursor:pointer;width:100%;padding:7px 12px;font-size:12px">
-          ⇄ 切换默认出口为【国内版】
-        </button>
+        <!-- 直接选，不再「⇄ 切到下一个」：三个出口时轮转要点两次才到 CodeArts。
+             选项由 syncRealmPicker() 按 /realm 返回的 options 生成（CodeArts 没
+             配置时只有两项），原生 select 会被上面的自定义下拉接管成主题样式。 -->
+        <select id="realmPicker" style="width:100%" aria-label="网关默认出口"
+                onchange="setActiveGatewayRealm(this.value)">
+          <option value="intl">国际版</option>
+          <option value="cn">国内版</option>
+        </select>
       </div>
     </div>
 
@@ -7994,18 +7982,7 @@ function updateUI(){
     : (isCnGw ? "https://copilot.tencent.com/v2"
               : ((window.CODEARTS_OVERVIEW || {}).base_url || "华为云 CodeArts"));
 
-  const gwOptions = (window.REALM_OPTIONS && window.REALM_OPTIONS.length)
-    ? window.REALM_OPTIONS : ["intl", "cn"];
-  let gwIdx = gwOptions.indexOf(gwRealm);
-  if(gwIdx < 0) gwIdx = 0;
-  const nextGw = gwOptions[(gwIdx + 1) % gwOptions.length];
-  const nextGwName = (nextGw === "intl") ? "国际版" : (nextGw === "cn" ? "国内版" : "CodeArts");
-  const btnToggle = document.getElementById("btnToggleRealm");
-  if(btnToggle) {
-    btnToggle.textContent = "切换默认出口为【" + nextGwName + "】";
-    btnToggle.style.borderColor = isIntlGw ? "var(--accent)" : (isCnGw ? "var(--bad)" : "#5b3fa0");
-    btnToggle.style.color = isIntlGw ? "var(--accent)" : (isCnGw ? "var(--bad)" : "#5b3fa0");
-  }
+  syncRealmPicker();
   const cardGw = document.getElementById("cardGatewayCtrl");
   if(cardGw){
     cardGw.style.borderColor = isIntlGw ? "rgba(37,99,235,.28)"
@@ -8154,15 +8131,19 @@ function realmLabel(r){
   return r === "intl" ? "国际版" : (r === "cn" ? "国内版" : "CodeArts");
 }
 
-async function toggleActiveGatewayRealm(){
+/* 默认出口下拉（卡片 4）：选中哪个就切到哪个，不再按 (idx+1) 轮转——三个出口
+   时「国际版 → CodeArts」要点两次，而且点到哪一个是顺手点出来的，不是选出来的。
+   同值或不在选项里的取值一律不提交，只把下拉拨回当前出口。 */
+async function setActiveGatewayRealm(realm){
   const options = window.REALM_OPTIONS || ["intl", "cn"];
   const cur = window.ACTIVE_GATEWAY_REALM || "intl";
-  let idx = options.indexOf(cur);
-  if(idx < 0) idx = 0;
-  const next = options[(idx + 1) % options.length];
+  if(!realm || realm === cur || options.indexOf(realm) < 0){
+    syncRealmPicker();
+    return;
+  }
   try {
-    const res = await postJSON("/realm", {realm: next});
-    window.ACTIVE_GATEWAY_REALM = res.current || next;
+    const res = await postJSON("/realm", {realm: realm});
+    window.ACTIVE_GATEWAY_REALM = res.current || realm;
     toast("网关默认上游已切换并永久保存为: " + realmLabel(window.ACTIVE_GATEWAY_REALM));
     setViewRealm(window.ACTIVE_GATEWAY_REALM);
     window.updateUI();
@@ -8175,7 +8156,31 @@ async function toggleActiveGatewayRealm(){
     }
   }catch(e){
     alert("切换失败: " + e.message);
+    syncRealmPicker();
   }
+};
+
+/* 下拉的选项与选中项。选项集只在 CodeArts 启用/停用后变化，所以按 data-options
+   比对，变了才重建 innerHTML——每轮 updateUI 都重写会把自定义下拉的面板一起
+   重建，还会让 i18n 多走一遍整棵树。 */
+function syncRealmPicker(){
+  const sel = document.getElementById("realmPicker");
+  if(!sel) return;
+  const options = (window.REALM_OPTIONS && window.REALM_OPTIONS.length)
+    ? window.REALM_OPTIONS : ["intl", "cn"];
+  const want = options.join(",");
+  if(sel.getAttribute("data-options") !== want){
+    sel.setAttribute("data-options", want);
+    sel.innerHTML = options.map(function(r){
+      return '<option value="' + r + '">' + realmLabel(r) + "</option>";
+    }).join("");
+    /* 新长出来的 <option> 是中文原文：非简体界面要再走一次 i18n，否则切过语言
+       之后重建的这一项（通常是 CodeArts）会停在中文。 */
+    if(window.WB_I18N && window.WB_I18N.current && window.WB_I18N.current() !== "zh"){
+      window.WB_I18N.apply();
+    }
+  }
+  sel.value = window.ACTIVE_GATEWAY_REALM || "intl";
 };
 
 /* ---- CodeArts 第三出口 ---- */

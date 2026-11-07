@@ -51,13 +51,31 @@ powershell -ExecutionPolicy Bypass -File .\sync-upstream.ps1
 
 ## 发版与回滚
 
+发版由 `.github/workflows/release.yml` 把关，测试矩阵见 `.github/workflows/tests.yml`：
+
+1. 三处版本一起改：`wb_proxy.py` 的 `"version"` 和 `server_version = "wb-proxy/x.y.z"`、
+   `wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；tag 名必须是 `v` + 该版本。
+   顺手同步 README 版本徽章、`docs/CHANGELOG.md` 顶条和上面「当前自用版本」（不参与门禁）。
+2. 版本改动先落到 `main`，等该 commit 的 tests 三条矩阵腿（Ubuntu 3.9 / Ubuntu 3.12 /
+   Windows 3.12）全部通过；确认绿了再打 tag。
+3. 在**同一个 commit** 上打 tag 并推送：
+
 ```bash
-# 1. 改 wb_proxy.py 里的 version
-# 2. 提交并打 tag（本地 tag 用 local- 前缀，避免和上游 v* 混淆）
-git commit -am "chore: bump version to 2.0.1"
-git tag -a local-v2.0.1 -m "local release 2.0.1"
-git push origin main local-v2.0.1
+V=2.0.2   # 换成新版本号
+git commit -am "chore(release): v$V"
+git push origin main
+# 确认上面这一提交的 tests 全矩阵绿了，再执行下面两行
+git tag -a "v$V" -m "release v$V"
+git push origin "v$V"
 ```
+
+   `local-v*` 前缀不匹配 `tags: ["v*"]`，两个工作流都不会触发，也不会出包；
+   `vX.Y.Z-ci` 是演练 tag（跳过 tag==源码版本断言，产物标 prerelease）。
+   tag 推送会在同一 SHA 上再触发一轮 tests，release.yml 的 gate 会等这一轮全矩阵通过，
+   且要求 overview / server_version / PKG_VERSION / tag 四处一致。
+4. 通过后 release.yml 只创建或更新 **Draft Release**（永不自动 publish，
+   `workflow_dispatch` 也不写 release）。核对 ZIP / .ipk / .apk / SHA256SUMS 与说明后，
+   到 GitHub 页面手动 Publish。
 
 回滚到基线：`git reset --hard baseline-v2.0.0`（会丢改动，先 `git branch backup-$(date +%Y%m%d)`）。
 

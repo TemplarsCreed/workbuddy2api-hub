@@ -12,6 +12,8 @@ BACKUP_ROOT=/var/backups/workbuddy2api-hub
 STAMP=$(date +%Y%m%d-%H%M%S)
 BOOTSTRAP_BACKUP=$BACKUP_ROOT/bootstrap-$STAMP
 ENV_CREATED=0
+# 自维护 fork 的 Release 源；wb_updates.py 的 WB_UPDATE_REPO 默认仍指向上游。
+UPDATE_REPO=TemplarsCreed/workbuddy2api-hub
 
 targets='
 /usr/local/libexec/workbuddy2api-hub-updater.py
@@ -69,13 +71,13 @@ install -d -o root -g root -m 0700 \
 install -d -o root -g root -m 0755 /usr/local/libexec /etc/tmpfiles.d "$DROPIN_DIR"
 
 if [ -e "$ENV_FILE" ]; then
-    if ! grep -qx 'WB_UPDATE_REPO=xybzljc/workbuddy2api-hub' "$ENV_FILE"; then
+    if ! grep -qx "WB_UPDATE_REPO=$UPDATE_REPO" "$ENV_FILE"; then
         echo "Existing updater repository differs; preserved $ENV_FILE." >&2
         exit 1
     fi
 else
     env_tmp=$(mktemp /etc/workbuddy2api-hub-updater.env.XXXXXX)
-    printf '%s\n' 'WB_UPDATE_REPO=xybzljc/workbuddy2api-hub' > "$env_tmp"
+    printf '%s\n' "WB_UPDATE_REPO=$UPDATE_REPO" > "$env_tmp"
     chown root:root "$env_tmp"
     chmod 0600 "$env_tmp"
     mv -f "$env_tmp" "$ENV_FILE"

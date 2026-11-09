@@ -23,7 +23,7 @@ git diff baseline-v2.0.0 --stat                  # 自有改动范围
 ## 改动前必读
 
 - `AGENTS.md` → 指向 `CONTRIBUTING.md` 的「AI / 智能体贡献者硬性规则」，改代码前先读一遍，避免踩它列的坑。
-- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.0.1**。改漏一处，`release.yml` 的 version job 会直接红。
+- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.1.0**。改漏一处，`release.yml` 的 version job 会直接红。
 - README 顶部是「自用维护分支」口径（无兼容承诺），不要把上游的「停止维护 / 赞助商」声明加回来。
 - `dashboard.html` 是 1.2MB 单文件前端，`wb_proxy.py` 是 1.2MB 主服务单文件；两者都是「大文件里改小地方」，编辑时用精确锚点，不要整文件重写。
 

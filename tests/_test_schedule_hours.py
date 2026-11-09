@@ -22,7 +22,7 @@ class ScheduleSettingsTests(unittest.TestCase):
     def test_defaults_when_the_key_is_absent(self):
         with tempfile.TemporaryDirectory(prefix="sched-") as directory:
             self.assertEqual(wb_settings.schedule_hours(directory), {
-                "checkin": [9, 21], "travel": [9, 21],
+                "checkin": [], "travel": [],
                 "keepalive": [22], "cat": [1],
             })
 
@@ -48,8 +48,8 @@ class ScheduleSettingsTests(unittest.TestCase):
             }
             wb_settings.save(directory, data)
             hours = wb_settings.schedule_hours(directory)
-            self.assertEqual(hours["checkin"], [9, 21])
-            self.assertEqual(hours["travel"], [9, 21])
+            self.assertEqual(hours["checkin"], [])
+            self.assertEqual(hours["travel"], [])
             self.assertEqual(hours["keepalive"], [22])
             self.assertEqual(hours["cat"], [3])
 
@@ -60,7 +60,7 @@ class ScheduleSettingsTests(unittest.TestCase):
             hours = wb_settings.schedule_hours(directory)
             self.assertEqual(hours["checkin"], [10, 20])
             self.assertEqual(hours["keepalive"], [12])
-            self.assertEqual(hours["travel"], [9, 21])
+            self.assertEqual(hours["travel"], [])
 
     def test_invalid_write_is_rejected(self):
         with tempfile.TemporaryDirectory(prefix="sched-") as directory:
@@ -274,6 +274,86 @@ class LogRoutingTests(unittest.TestCase):
         with mock.patch.dict(sys.modules, {"__main__": object()}):
             self.assertIs(wb_scheduler._proxy_module(), cached)
 
+
+
+class CnRewardsRandomSlotTests(unittest.TestCase):
+    """国内版签到 + 猫猫旅行：每天 08:00–10:00 之间随机一个时刻，不再占整点。"""
+
+    def test_default_scheduler_uses_a_random_slot_instead_of_hours(self):
+        with tempfile.TemporaryDirectory(prefix="sched-cn-") as directory:
+            scheduler = wb_scheduler.Scheduler(StubPool(directory))
+            self.assertEqual((scheduler.checkin_hours, scheduler.travel_hours), ([], []))
+            self.assertRegex(scheduler.cn_rewards_slot, r"^0[89]:[0-5]\d$")
+            # 随机时刻不进整点网格：8 点 / 9 点不会再来一次整点巡检。
+            self.assertNotIn(8, scheduler.all_hours)
+            self.assertNotIn(9, scheduler.all_hours)
+            status = scheduler.status()
+            self.assertIn("每日随机时段", status["mode_cn"])
+            self.assertIn(scheduler.cn_rewards_slot, status["mode_cn"])
+            self.assertEqual(status["cn_rewards_slot"], scheduler.cn_rewards_slot)
+
+    def test_slot_is_drawn_once_per_day_and_persisted(self):
+        with tempfile.TemporaryDirectory(prefix="sched-cn-") as directory:
+            first = wb_settings.cn_rewards_random_time(directory)
+            self.assertEqual(wb_settings.cn_rewards_random_time(directory), first,
+                             "同一天重读必须拿到同一个时刻")
+            stored = wb_settings.load(directory).get(wb_settings.CN_REWARDS_RANDOM_KEY)
+            self.assertEqual(stored["time"], first)
+            self.assertEqual(stored["date"], time.strftime("%Y-%m-%d", time.localtime()))
+            hour, minute = [int(part) for part in first.split(":")]
+            self.assertGreaterEqual(hour * 60 + minute, 8 * 60)
+            self.assertLess(hour * 60 + minute, 10 * 60)
+
+            tomorrow = time.time() + 86400
+            nxt = wb_settings.cn_rewards_random_time(directory, now=tomorrow)
+            hour, minute = [int(part) for part in nxt.split(":")]
+            self.assertGreaterEqual(hour * 60 + minute, 8 * 60)
+            self.assertLess(hour * 60 + minute, 10 * 60)
+
+    def test_slot_fires_once_after_the_draw_and_only_inside_the_grace_window(self):
+        with tempfile.TemporaryDirectory(prefix="sched-cn-") as directory:
+            scheduler = wb_scheduler.Scheduler(StubPool(directory))
+            scheduler.cn_rewards_slot = "08:37"
+
+            def at(hour, minute):
+                return time.struct_time((2026, 11, 9, hour, minute, 0, 0, 0, -1))
+
+            self.assertEqual(scheduler._due_cn_rewards_slot(at(8, 36)), "",
+                             "还没到点不能跑")
+            self.assertEqual(scheduler._due_cn_rewards_slot(at(8, 37)), "08:37")
+            self.assertEqual(scheduler._due_cn_rewards_slot(at(9, 30)), "",
+                             "当天只命中一次")
+            scheduler._cn_rewards_done.clear()
+            self.assertEqual(scheduler._due_cn_rewards_slot(at(12, 30)), "",
+                             "超出补跑窗口就不再跑")
+
+    def test_random_slot_cycle_runs_checkin_and_travel_but_not_keepalive_or_cat(self):
+        with tempfile.TemporaryDirectory(prefix="sched-cn-") as directory:
+            scheduler = wb_scheduler.Scheduler(StubPool(directory))
+            account = FakeAccount()
+            account.expires_at = time.time() + 60
+            scheduler.pool.accounts = [account]
+            stamp = time.struct_time((2026, 11, 9, 8, 40, 0, 0, 0, -1))
+            seen = {"travel": 0, "cat": 0}
+
+            def travel(_acc):
+                seen["travel"] += 1
+                return {}
+
+            def night(_acc):
+                seen["cat"] += 1
+                return {"logs": []}
+
+            with mock.patch.object(wb_scheduler.time, "localtime", lambda *a: stamp), \
+                    mock.patch.object(wb_scheduler.time, "sleep", lambda *_: None), \
+                    mock.patch.object(wb_scheduler, "do_cat_travel", travel), \
+                    mock.patch.object(wb_scheduler.wb_tasks, "run_streak_bonus", lambda _a: {}), \
+                    mock.patch.object(wb_scheduler.wb_tasks, "run_night_growth", night):
+                scheduler._run_cycle("国内版任务随机时段命中", cn_rewards_only=True)
+
+            self.assertEqual((account.checkins, account.reports), (1, 1))
+            self.assertEqual(seen, {"travel": 1, "cat": 0})
+            self.assertEqual(account.refreshes, 0, "随机时段那一轮不碰 Token 保活")
 
 if __name__ == "__main__":
     unittest.main()

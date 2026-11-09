@@ -1146,10 +1146,15 @@ def set_keep_backups(accounts_dir, value):
     return keep
 
 
-#: 后台排程时段（CST 24 小时制）。默认值与旧版硬编码完全一致，老安装行为不变。
+#: 后台排程时段（CST 24 小时制）。checkin / travel 默认为空：国内版签到与猫猫旅行
+#: 不再按整点跑，改为每天 08:00–10:00 之间随机抽一个时刻（见 cn_rewards_random_time）。
+#: keepalive / cat 仍是整点。
+#:
+#: 想回到固定整点：在 settings.json 里显式写 schedule.checkin / schedule.travel，
+#: 写了就按老逻辑走整点排程，随机时段整体让位（见 wb_scheduler._reload_schedule）。
 DEFAULT_SCHEDULE_HOURS = {
-    "checkin": [9, 21],
-    "travel": [9, 21],
+    "checkin": [],
+    "travel": [],
     "keepalive": [22],
     "cat": [1],
 }
@@ -2644,6 +2649,43 @@ DAILY_CHAT_RANDOM_MINUTES = (5, 55)
 DAILY_CHAT_RANDOM_KEY = "daily_chat_random"
 DAILY_CHAT_STARTUP_CATCHUP_KEY = "daily_chat_startup_catchup"
 DAILY_CHAT_WEB_FALLBACK_ACTIVITY_KEY = "daily_chat_web_fallback_activity"
+
+#: 国内版签到 + 猫猫旅行的每日随机时段窗口（CST，左闭右开）。默认 08:00–09:59。
+CN_REWARDS_WINDOW = (8, 10)
+CN_REWARDS_RANDOM_KEY = "cn_rewards_random"
+
+
+def _draw_cn_rewards_time():
+    """在 CN_REWARDS_WINDOW 里抽一个分钟级时刻，返回 "HH:MM"。"""
+    start = CN_REWARDS_WINDOW[0] * 60
+    end = CN_REWARDS_WINDOW[1] * 60
+    if end <= start:
+        start, end = 8 * 60, 10 * 60
+    minute = random.randint(start, end - 1)
+    return "%02d:%02d" % (minute // 60, minute % 60)
+
+
+def cn_rewards_random_time(accounts_dir, now=None):
+    """今日国内版签到 / 猫猫旅行的随机执行时刻（"HH:MM"），每天抽一次并落盘。
+
+    和 daily_chat_random_times() 同一个理由：调度器每 30 秒重读设置、进程也可能在
+    当天中途重启，每次重抽会让时刻一直漂移，「今天跑过没有」也就永远说不准。落盘的
+    date 就是「当天只抽一次」的闸门。
+    """
+    moment = time.localtime(now) if now is not None else time.localtime()
+    today = time.strftime("%Y-%m-%d", moment)
+    data = load(accounts_dir)
+    stored = data.get(CN_REWARDS_RANDOM_KEY)
+    if isinstance(stored, dict) and stored.get("date") == today:
+        value = str(stored.get("time") or "")
+        if _normalize_times([value]):
+            return value
+    value = _draw_cn_rewards_time()
+    with _lock:
+        data = load(accounts_dir)
+        data[CN_REWARDS_RANDOM_KEY] = {"date": today, "time": value}
+        save(accounts_dir, data)
+    return value
 
 
 def _clean_models(value):

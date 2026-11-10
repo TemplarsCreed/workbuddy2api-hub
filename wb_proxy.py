@@ -4137,7 +4137,7 @@ def remaining_priority_enabled():
 
 
 def affinity_stable_key_enabled():
-    """更稳的会话粘滞键开关（默认关，关着时与上游逻辑一字不差）。"""
+    """更稳的会话粘滞键开关（默认开；显式关闭时与旧逻辑一字不差）。"""
     return wb_settings.affinity_stable_key_enabled(ACCOUNTS_DIR) is True
 
 
@@ -11868,8 +11868,8 @@ def affinity_route(messages):
     line share - they then overwrite each other's binding every turn and each
     turn lands on the other one's account, dropping the prefix cache each time.
     Adding the first assistant reply (and the user turn after it) makes the two
-    keys diverge from the second turn on. The switch is off by default so an
-    existing install keeps exactly the upstream behaviour and can roll back.
+    keys diverge from the second turn on. The switch is on by default; an
+    existing install can turn it off to restore the old key derivation.
     """
     if not AFFINITY_BY_PREFIX:
         return None, None
@@ -13321,21 +13321,25 @@ def normalize_roles(messages):
 # ---------------------------------------------------------------------------
 # Fingerprint Sanitization (immunizes against Codex / Claude Code WAF patterns)
 # ---------------------------------------------------------------------------
-SANITIZE_FEATURES = (
+# Claude Code 2.1.37+ 会把计费归因头作为 system 的第一个文本块发出来（#853）：
+#   x-anthropic-billing-header: cc_version=...; cc_entrypoint=...; cch=...; ...
+# 上游把 `x-anthropic-billing-header` 当保留关键字，出现即 400 / 11128。
+# v2.0.7 只登记了缩写 `...-hdr`，完整键名漏网，于是 2.0.3 可用、2.0.7 被拦截（#854）。
+SANITIZE_BILLING_HDR_NAMES = (
     "x-anthropic-billing-header",
-    "cc_entrypoint=",
+    "x-anthropic-billing-hdr",
+)
+SANITIZE_FEATURES = SANITIZE_BILLING_HDR_NAMES + (
     "You are Claude Code",
     "Main branch (",
     "You are a coding agent running in the Codex CLI",
     "github.com/anthropics/",
-    "11128",
 )
 SANITIZE_REWRITES = (
     ("Main branch (you will usually use this for PRs)",
      "Default branch (you will usually use this for PRs)"),
     ("To give feedback, users should report the issue at https://github.com/anthropics/claude-code/issues",
      "To provide feedback, users should report the issue at https://github.com/anthropics/claude-code/issues"),
-    ("11128", "11-128"),
 )
 # Codex CLI 的自述首段（#743）：上游按「身份句 + Codex CLI」判 11-128。
 # 旧规则把中性句改写成这段自述，反过来把指纹注入出站 body；这里整句中性化，
@@ -13352,8 +13356,15 @@ SANITIZE_CLAUDE_CODE_INTRO_RE = re.compile(
     r"(?: tool)? for Claude(?: Code)?\.?")
 SANITIZE_CLAUDE_CODE_INTRO_REPLACEMENT = "You are a helpful AI assistant."
 SANITIZE_CLAUDE_CODE_LOWER = "you are claude code,"
-SANITIZE_HDR_RE = re.compile(r"(?i)x-anthropic-billing-header:[^;\r\n]*;?\s*")
-SANITIZE_BARE_HDR_RE = re.compile(r"(?i)x-anthropic-billing-header")
+# 真实形态是一整行，尾部还有 `cch=` 这类不以前缀 `cc_` 开头的参数；按行删除，
+# 避免只删到第一个分号后把 `x-anthropic-billing-header:` 留在出站文本里。
+SANITIZE_HDR_LINE_RE = re.compile(
+    r"(?im)^[ \t]*x-anthropic-billing-(?:header|hdr)[ \t]*:[^\r\n]*(?:\r?\n|$)")
+# 行首之外的嵌入形态（旧客户端 / 日志回放）仍按「键 + 首个值」删除，
+# 后续 `cc_*` 参数由 SANITIZE_KV_RE 清理。
+SANITIZE_HDR_RE = re.compile(
+    r"(?i)x-anthropic-billing-(?:header|hdr)\s*:\s*[^;\r\n]*(?:;\s*)?")
+SANITIZE_BARE_HDR_RE = re.compile(r"(?i)x-anthropic-billing-(?:header|hdr)")
 SANITIZE_KV_RE = re.compile(r"(?i)\bcc_[a-z0-9_]+=[^;\r\n]*;?\s*")
 # WorkBuddy upstream returns 11128 ("Illegal API invocation from an unapproved
 # channel") when this exact OmO identity fingerprint appears as a contiguous
@@ -13445,28 +13456,26 @@ SANITIZE_BRAND_LOWER = "harness"
 # 归一化成基字母、再小写，副本上的 `in` 与 (?i) search 完全等价（多字符模式
 # 同样成立；全码点替换 + 定向用例 + 随机串对拍零差异，见 tests/_test_hotpath_savings.py）。
 SANITIZE_REI_FOLD = str.maketrans({0x130: "i", 0x131: "i", 0x17F: "s"})
-# 两个小写字面量直接从正则派生，保证与正则永远同源：手抄第二份迟早漂移，
-# 派生出来的值不存在这个问题。pattern 里的 (?i) 是内联旗标，剥掉后就是
-# 字面量本体。
-SANITIZE_BARE_HDR_LOWER = SANITIZE_BARE_HDR_RE.pattern
-if SANITIZE_BARE_HDR_LOWER.startswith("(?i)"):
-    SANITIZE_BARE_HDR_LOWER = SANITIZE_BARE_HDR_LOWER[4:]
+# 计费头有两个合法拼写（header / hdr），字面量快路径直接用登记表；
+# OMO 短语仍是单一字面量，继续从正则派生，保证与正则同源。
+SANITIZE_BARE_HDR_LOWER = SANITIZE_BILLING_HDR_NAMES[0]
 SANITIZE_OMO_JUNIOR_LOWER = SANITIZE_OMO_JUNIOR_RE.pattern.lower()
 SANITIZE_IDENTITY_LOWER = SANITIZE_IDENTITY_VERBS
 def has_fingerprint(text, identity=True):
     if not isinstance(text, str) or not text:
         return False
-    for f in SANITIZE_FEATURES:
-        if f in text:
-            return True
     # 三个特例字符几乎从不出现：先做三次 C 速度探测，命中才走归一化副本，
     # 常规文本只付一次 lower()。
     if "\u0130" in text or "\u0131" in text or "\u017f" in text:
         low = text.translate(SANITIZE_REI_FOLD).lower()
     else:
         low = text.lower()
+    for f in SANITIZE_FEATURES:
+        if f.lower() in low:
+            return True
     if (SANITIZE_BARE_HDR_LOWER in low
-            or SANITIZE_OMO_JUNIOR_LOWER in low):
+            or SANITIZE_OMO_JUNIOR_LOWER in low
+            or "cc_" in low):
         return True
     if not identity:
         return False
@@ -13517,13 +13526,17 @@ def sanitize_text(text, identity=True):
         text = SANITIZE_BRAND_RE.sub(SANITIZE_BRAND_REPLACEMENT, text)
     for old, new in SANITIZE_REWRITES:
         text = text.replace(old, new)
+    # 计费归因头通常独占 system 首行；先整行删掉，`cch=` 等尾部参数不会残留。
+    text = SANITIZE_HDR_LINE_RE.sub("", text)
     text = SANITIZE_HDR_RE.sub("", text)
     if "cc_" in text:
         prev = ""
         while prev != text:
             prev = text
             text = SANITIZE_KV_RE.sub("", text)
-    text = SANITIZE_BARE_HDR_RE.sub("x-anthropic-billing-hdr", text)
+    # The bare header is the last rewrite: has_fingerprint() matches this exact
+    # key, so replacing it earlier would leave a value the fast path ignores.
+    text = SANITIZE_BARE_HDR_RE.sub("anthropic-header", text)
     return text.strip()
 def sanitize_content(content, identity=True):
     if isinstance(content, str):
@@ -13614,8 +13627,15 @@ def sanitize_messages(messages):
             # 仍是用户数据，不改写。
             identity = item.get("role") in ("system", "developer", "assistant")
             if "content" in item and not preserve_tool_result:
+                before = item.get("content")
                 item["content"] = sanitize_content(item["content"],
                                                    identity=identity)
+                # 整条 system 文本可能只有一个计费归因头；清洗后为空就直接
+                # 丢掉，避免把空 system 消息发给上游（空文本段会 400 / 11151）。
+                if (item.get("role") in ("system", "developer")
+                        and isinstance(before, str) and before.strip()
+                        and item["content"] == ""):
+                    continue
             if isinstance(item.get("reasoning_content"), str):
                 item["reasoning_content"] = sanitize_text(
                     item["reasoning_content"], identity=False)
@@ -22484,12 +22504,14 @@ class Handler(BaseHTTPRequestHandler):
                 # Cache-Control 必须原样重发（RFC 7232 §4.1），否则缓存会丢掉状态。
                 self.send_response(304)
                 self.send_header("Cache-Control", "no-cache")
+                self.send_header("X-Robots-Tag", "noindex, nofollow")
                 self.send_header("ETag", etag)
                 self.end_headers()
                 return
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Robots-Tag", "noindex, nofollow")
         # no-cache 而不是 no-store：允许存储，但每次使用前必须回源校验；配合
         # 上面的校验符，校验命中的代价是一次 304 而不是整页约 470KB。不加
         # max-age：没有它浏览器每次打开都会校验，应用更新后新版页面立即生效。

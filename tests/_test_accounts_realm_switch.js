@@ -76,6 +76,10 @@ assert.ok(/<select id="realmPicker"[^>]*onchange="setActiveGatewayRealm\(this\.v
   '下拉的 onchange 应直连 setActiveGatewayRealm(this.value)');
 assert.ok(!/\(gwIdx \+ 1\) % gwOptions\.length/.test(script),
   '不该再按 (idx + 1) 轮转出口');
+assert.ok(html.includes('.realm-card.gateway-ctrl:hover{transform:none'),
+  '默认出口卡 hover 时不应位移，避免破坏下拉面板 position:fixed 包含块');
+assert.ok(html.includes('html[data-ui="next"] .realm-card.gateway-ctrl:hover{transform:none!important'),
+  'Next UI 默认出口卡 hover 时必须保持 transform:none !important，避免自绘下拉错位');
 
 // 英文词条：aria-label 也在被翻译的属性里，缺了就会漏出中文
 for(const [zh, en] of [['版本视图', 'Realm view'],

@@ -1,3 +1,9 @@
+## v2.2.1
+
+- **修复网关默认出口下拉在 Next UI 下 hover 错位无法选中的问题**：自绘下拉组件（`.cs-panel`）使用 `position: fixed` 结合视口计算弹出坐标，而网关出口卡片（`#cardGatewayCtrl`）在 Next UI 下被全局 `.realm-card:hover` 的 `transform: translateY(-1px)` 强制转为了子元素的包含块（containing block），导致面板展开坐标相对卡片严重错位并在光标离开时瞬移消失。显式在 Next UI 声明 `.realm-card.gateway-ctrl:hover { transform: none !important; }`，恢复正常弹出与点选。
+- **回归防护**：在 `tests/_test_accounts_realm_switch.js` 中增加 Next UI 默认出口卡防包含块漂移样式断言。
+- 全量测试：**289 个套件：218 个 Python + 71 个 JS，全部通过**。
+
 ## v2.2.0
 
 - **合并上游 v2.0.2 – v2.0.8**（原作者 2026-11-09 恢复更新，含上游 `v2.0.7` 与 `v2.0.8`）：Claude Code 完整计费归因头清洗（#853/#854）、账号列表横向滚动固定账号列（#851）、更稳会话粘滞键默认开启（#839）、面板禁止搜索引擎收录（#842）、Rust 社区版引用声明，以及 v2.0.2–v2.0.6 的批量导入、媒体能力始终开启、可选 Go/uTLS 传输桥、设备 Token 与桌面 chat 兼容头、文本 / 媒体号池隔离改为可选（默认关闭）、CodeArts 手动停用与积分耗尽冷却、Dashboard 首屏提速（#832）、用量缓存节流、订阅桥接与 `start-workbuddy-all.bat` 等。

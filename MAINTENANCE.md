@@ -24,7 +24,7 @@ git diff baseline-v2.0.0 --stat                  # 自有改动范围
 ## 改动前必读
 
 - `AGENTS.md` → 指向 `CONTRIBUTING.md` 的「AI / 智能体贡献者硬性规则」，改代码前先读一遍，避免踩它列的坑。
-- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.2.2**。改漏一处，`release.yml` 的 version job 会直接红。
+- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.2.3**。改漏一处，`release.yml` 的 version job 会直接红。
 - README 顶部是「自用维护分支」口径（无兼容承诺），不要把上游的「停止维护 / 赞助商 / 官方群聊」加回来；上游的「凭证安全」提示保留。
 - **合并上游**：`git fetch upstream --tags && git merge upstream/main`。冲突通常在 4 处：`README.md`（顶部声明与徽章）、`docs/CHANGELOG.md`（两边都在顶部加版本段）、`wb_proxy.py`（版本号）、`wrt/openwrt/workbuddy2api/Makefile`（`PKG_VERSION`）。解决时版本号统一到自用线（比上游大），CHANGELOG 保留双方段落、上游重名的 `v2.0.1` 标成「上游」；合并后必须重跑全量测试与面板冒烟，因为 `dashboard.html` 是自动合并的，冲突不会在那里报出来。
 - `dashboard.html` 是 1.2MB 单文件前端，`wb_proxy.py` 是 1.2MB 主服务单文件；两者都是「大文件里改小地方」，编辑时用精确锚点，不要整文件重写。

@@ -78,6 +78,13 @@ git push origin "v$V"
 4. 通过后 release.yml 只创建或更新 **Draft Release**（永不自动 publish，
    `workflow_dispatch` 也不写 release）。核对 ZIP / .ipk / .apk / SHA256SUMS 与说明后，
    到 GitHub 页面手动 Publish。
+   **禁止用 `gh release create` 手工建 release**：release.yml 只肯写 draft，
+   遇到已发布的同名 release 会直接报「已经是一个已发布的 release，本工作流不碰它」并失败，
+   结果是 Release 里永远没有安装包（历史 v2.2.1 / v2.2.2 就是这样丢了资产）。
+   手工发布只能用 `gh release edit v$V --draft=false`；publish 事件会自动触发
+   `release-checksums.yml` 补上 checksums.txt。
+   若已误建：`gh release delete v$V --yes`（tag 保留）→ `gh run rerun <release-run-id> --failed`
+   → 等 draft 出现资产 → `gh release edit v$V --draft=false`。
 
 回滚到基线：`git reset --hard baseline-v2.0.0`（会丢改动，先 `git branch backup-$(date +%Y%m%d)`）。
 

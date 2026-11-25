@@ -32,11 +32,15 @@ if (!script.includes('__recentProbe')) {
 // One shared fake DOM for every dashboard suite: tests/_dom_stub.js. Elements
 // are persistent per id, so the rendered list can be read back.
 const dom = require('./_dom_stub.js');
+let recentPayload;
+let recentUrl;
 const {window: domWindow} = dom.installDom({
   fetch: url => {
-    const payload = String(url).includes('/usage/recent')
-      ? {rows: ROWS, total: ROWS.length, page: 1, total_pages: 1}
-      : {rows: [], total: 0, accounts: [], accounts_map: {}, slots: [], data: []};
+    let payload = {rows: [], total: 0, accounts: [], accounts_map: {}, slots: [], data: []};
+    if(String(url).includes('/usage/recent')){
+      recentUrl = String(url);
+      payload = recentPayload;
+    }
     return Promise.resolve({
       status: 200, ok: true,
       json: () => Promise.resolve(payload),
@@ -67,8 +71,11 @@ const api = new Function(script + `
   return window.__recentProbe;`)();
 
 (async () => {
+  recentPayload = {rows: ROWS, total: ROWS.length, page: 1, total_pages: 1, revision: 'r1'};
   await api.loadRecent();
-  const rendered = dom.byId('recentList').innerHTML;
+  const list = dom.byId('recentList');
+  const originalRows = list.children.slice();
+  const rendered = originalRows.map(node => node.innerHTML).join('\n');
   let checks = 0;
   const check = (label, cond, extra) => {
     checks += 1;
@@ -113,6 +120,20 @@ const api = new Function(script + `
   check('recentStamp refuses to invent a date for a stamp it cannot read',
         api.recentStamp('') === '—' && api.recentStamp(undefined) === '—',
         api.recentStamp('') + ' / ' + api.recentStamp(undefined));
+  recentPayload = {unchanged: true, revision: 'r1'};
+  await api.loadRecent();
+  check('an unchanged response keeps the original rows',
+        recentUrl.includes('watch=1&rev=r1')
+        && list.children.length === originalRows.length
+        && originalRows.every((node, i) => node === list.children[i]));
+
+  const newest = {...ROWS[0], iso: dayStamp(0) + 'T23:51:00'};
+  recentPayload = {rows: [newest, ...ROWS.slice(0, -1)], total: ROWS.length + 1, revision: 'r2'};
+  await api.loadRecent();
+  check('a new request prepends one row and retains the previous visible rows',
+        list.children[0].innerHTML.includes('23:51:00')
+        && list.children.length === originalRows.length
+        && originalRows.slice(0, -1).every((node, i) => node === list.children[i + 1]));
 
   console.log('recent-requests timestamp assertions passed (' + checks + ' checks)');
 })();

@@ -47,9 +47,11 @@ def cockpit_row(**extra):
 
 class CockpitRowTests(unittest.TestCase):
     def test_snake_case_row_maps_to_account_kwargs(self):
-        kwargs = wb_accounts.normalise_import_row(cockpit_row())
+        token = fake_jwt()
+        kwargs = wb_accounts.normalise_import_row(
+            cockpit_row(access_token=token))
         self.assertEqual(kwargs["uid"], "uid-cockpit")
-        self.assertEqual(kwargs["accessToken"], fake_jwt())
+        self.assertEqual(kwargs["accessToken"], token)
         self.assertEqual(kwargs["refreshToken"], "refresh-token")
         self.assertEqual(kwargs["realm"], "intl")
         self.assertEqual(kwargs["source"], "cockpit")
@@ -79,11 +81,13 @@ class CockpitPoolImportTests(unittest.TestCase):
     def test_bare_snake_case_object_is_accepted(self):
         # #556: the outer container check only knew camelCase, so a single
         # cockpit row was rejected before normalise_import_row could map it.
-        rows, error = wb_accounts._coerce_account_rows(cockpit_row())
+        token = fake_jwt()
+        rows, error = wb_accounts._coerce_account_rows(
+            cockpit_row(access_token=token))
         self.assertEqual(error, "")
         self.assertEqual(len(rows), 1)
         kwargs = wb_accounts.normalise_import_row(rows[0])
-        self.assertEqual(kwargs["accessToken"], fake_jwt())
+        self.assertEqual(kwargs["accessToken"], token)
 
     def test_bare_camel_case_object_still_accepted(self):
         rows, error = wb_accounts._coerce_account_rows({"accessToken": fake_jwt()})

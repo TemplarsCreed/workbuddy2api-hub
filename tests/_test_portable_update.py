@@ -6,6 +6,7 @@ parts that can destroy an install: path traversal, version mismatch, backup,
 replace, and rollback.
 """
 import hashlib
+import io
 import json
 import os
 import stat
@@ -55,7 +56,51 @@ def new_files(version):
     }
 
 
+class DownloadTests(unittest.TestCase):
+    def test_partial_download_preserves_existing_asset_and_removes_part(self):
+        class BrokenResponse(io.BytesIO):
+            headers = {"Content-Length": "100"}
+
+            def read(self, size=-1):
+                if self.tell():
+                    raise OSError("connection lost")
+                return super().read(size)
+
+        with tempfile.TemporaryDirectory() as directory:
+            dest = os.path.join(directory, "update.zip")
+            with open(dest, "wb") as fh:
+                fh.write(b"previous")
+            with mock.patch.object(U.urllib.request, "urlopen",
+                                   return_value=BrokenResponse(b"incomplete")):
+                with self.assertRaisesRegex(OSError, "connection lost"):
+                    U.download("https://example.test/update.zip", dest)
+            self.assertEqual(os.listdir(directory), ["update.zip"])
+            with open(dest, "rb") as fh:
+                self.assertEqual(fh.read(), b"previous")
+
+    def test_short_or_empty_response_is_rejected_before_atomic_replace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            dest = os.path.join(directory, "update.zip")
+            for data, length in ((b"short", "10"), (b"", "0")):
+                response = io.BytesIO(data)
+                response.headers = {"Content-Length": length}
+                with mock.patch.object(U.urllib.request, "urlopen", return_value=response):
+                    with self.assertRaises(U.UpdateError):
+                        U.download("https://example.test/update.zip", dest)
+                self.assertEqual(os.listdir(directory), [])
+
+            response = io.BytesIO(b"complete")
+            response.headers = {"Content-Length": "8"}
+            with mock.patch.object(U.urllib.request, "urlopen", return_value=response):
+                self.assertEqual(U.download("https://example.test/update.zip", dest), dest)
+            with open(dest, "rb") as fh:
+                self.assertEqual(fh.read(), b"complete")
+
+
 class ChecksumTests(unittest.TestCase):
+    def test_default_repository_is_the_migrated_repository(self):
+        self.assertEqual(U.REPO_DEFAULT, "niyouqianma/workbuddy2api-hub")
+
     def test_parse_checksums(self):
         text = "%s  workbuddy2api-hub-v2.0.0.zip\n%s *other.ipk\n" % ("a" * 64, "b" * 64)
         parsed = U.parse_checksums(text)

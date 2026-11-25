@@ -18,11 +18,12 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 import zipfile
 
-REPO_DEFAULT = "ardeyouxipianyi/workbuddy2api-hub"
+REPO_DEFAULT = "niyouqianma/workbuddy2api-hub"
 UPDATES_DIR = "updates"
 STATUS_NAME = "status.json"
 MANIFEST_NAME = "release-manifest.json"
@@ -144,9 +145,26 @@ def sha256_file(path):
 
 def download(url, dest, timeout=60):
     req = urllib.request.Request(url, headers={"User-Agent": "wb-proxy-updater"})
-    with urllib.request.urlopen(req, timeout=timeout) as src:
-        with open(dest, "wb") as out:
-            shutil.copyfileobj(src, out)
+    part = None
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as src:
+            with tempfile.NamedTemporaryFile(
+                    mode="wb", dir=os.path.dirname(os.path.abspath(dest)),
+                    prefix=os.path.basename(dest) + ".", suffix=".part",
+                    delete=False) as out:
+                part = out.name
+                shutil.copyfileobj(src, out)
+                length = src.headers.get("Content-Length")
+                if not out.tell() or (length and length.isdecimal() and out.tell() != int(length)):
+                    raise UpdateError("Incomplete update download")
+        os.replace(part, dest)
+        part = None
+    finally:
+        if part is not None:
+            try:
+                os.remove(part)
+            except FileNotFoundError:
+                pass
     return dest
 
 

@@ -588,8 +588,11 @@ def _parse_news(page, n, query):
         if not title or not url.startswith("http"):
             continue
         date = _strip_tags(m_date.group(1)) if m_date else ""
-        results.append({"title": title, "url": url,
-                        "snippet": ("News item - " + date) if date else "News item"})
+        entry = {"title": title, "url": url,
+                 "snippet": ("News item - " + date) if date else "News item"}
+        if date:
+            entry["published_date"] = date
+        results.append(entry)
         if len(results) >= n:
             break
     return results
@@ -727,15 +730,20 @@ def _format_results(query, results, note=""):
             "Cite the sources you used at the end of your answer.")
 
 
-def _search_fanout(query, n):
+def _search_fanout(query, n, structured=False):
     """依序打所有引擎；第一家成功的直接回报，只有全挂才回错误。
 
     常规引擎（DuckDuckGo / Bing）接手时结果与平常无异；换成 Wikipedia /
     Stack Overflow / Google News 这类非常规来源时，结果会带上 source_note，
     让模型知道手上的不是一般网页搜寻结果。
+
+    `structured=True` 时回 dict（给 wb_webgateway 的 provider 用），
+    其余情况仍旧回整段文字，既有呼叫端行为不变。
     """
     names = _chain_for(query)
     if not names:
+        if structured:
+            return {"ok": False, "results": [], "error": "no search engines are configured"}
         return "Error: no search engines are configured."
     started = time.monotonic()
     deadline = started + SEARCH_BUDGET if SEARCH_BUDGET > 0 else float("inf")
@@ -753,6 +761,8 @@ def _search_fanout(query, n):
         _log("webtools: search %r served by %s%s (%d attempt(s), %d ms, %d result(s))"
              % (query, name, " (non-standard source, labelled)" if note else "",
                 attempts[0], int((time.monotonic() - started) * 1000), len(results)))
+        if structured:
+            return {"ok": True, "results": results, "engine": name, "note": note}
         return _format_results(query, results, note)
 
     def _try(name):
@@ -796,10 +806,14 @@ def _search_fanout(query, n):
 
     if clean_empty[0]:
         _log("webtools: no results for %r (engines answered, all empty)" % query)
+        if structured:
+            return {"ok": True, "results": [], "engine": "", "note": "", "empty": True}
         return ("No results found for: %s%sTry a broader or differently worded query."
                 % (query, chr(10) + chr(10)))
     detail = "; ".join("%s: %s" % (name, why) for name, why in failures) or "no engine available"
     _log("webtools: search %r failed on every backend (%s)" % (query, detail), level="ERROR")
+    if structured:
+        return {"ok": False, "results": [], "error": detail}
     return (_UNAVAILABLE_PREFIX +
             ". Every backend was tried automatically and all failed (%s). Do not retry "
             "the same query right away; tell the user that web search is temporarily "
@@ -1098,3 +1112,77 @@ def execute(name, args_raw):
         return "Error: %s is not a tool this gateway runs." % name
     except Exception as exc:
         return "Error running %s: %s: %s" % (name, type(exc).__name__, exc)
+
+
+# ---------------------------------------------------------------------------
+# 结构化出口（给 wb_webgateway 的 provider 用）
+#
+# 上面所有函数的签名与返回值保持不变；这里只是把同一批引擎与抓取逻辑
+# 换一个 dict 形状交付，省掉 provider 反解文字外壳的麻烦。
+# ---------------------------------------------------------------------------
+
+#: 公开别名：registry 的 fetch 分发点统一用它挡内网地址。
+guard_url = _guard_url
+
+#: 公开别名：伪模型与协议层要把结果排成同一套文字给模型读。
+format_results = _format_results
+
+
+def _domain_matches(url, allow):
+    try:
+        host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    except Exception:
+        return False
+    return any(host == d or host.endswith("." + d) for d in allow)
+
+
+def web_search_results(query, num_results=5, allowed_domains=None):
+    """结构化搜寻，永不抛例外。"""
+    query = str(query or "").strip()
+    if len(query) < 2:
+        return {"ok": False, "results": [], "error": "query needs at least 2 characters"}
+    try:
+        n = int(num_results)
+    except (TypeError, ValueError):
+        n = 5
+    n = max(1, min(MAX_RESULTS, n))
+    out = _search_fanout(query, n, structured=True)
+    if not isinstance(out, dict):
+        return {"ok": False, "results": [], "error": "unexpected engine response"}
+    allow = [str(d).strip().lower() for d in (allowed_domains or []) if str(d or "").strip()]
+    if allow and out.get("results"):
+        out["results"] = [r for r in out["results"] if _domain_matches(r.get("url") or "", allow)]
+    out["query"] = query
+    return out
+
+
+def web_fetch_result(url, start_index=0, max_chars=None):
+    """结构化抓取，永不抛例外。`next_start_index` 非 None 表示还有下一页。"""
+    url, problem = _guard_url(url, resolve=True)
+    if problem:
+        return {"ok": False, "url": "", "error": problem}
+    try:
+        start = max(0, int(start_index))
+    except (TypeError, ValueError):
+        start = 0
+    try:
+        limit = int(max_chars) if max_chars else MAX_FETCH_CHARS
+    except (TypeError, ValueError):
+        limit = MAX_FETCH_CHARS
+    limit = max(1, min(MAX_FETCH_CHARS, limit))
+    text = _fetch_text(url)
+    if text.startswith("Error:"):
+        return {"ok": False, "url": url, "error": text[len("Error:"):].strip()}
+    total = len(text)
+    if start >= total:
+        return {"ok": False, "url": url,
+                "error": "start_index %d is past the end (%d characters)" % (start, total)}
+    end = min(start + limit, total)
+    return {
+        "ok": True,
+        "url": url,
+        "content": text[start:end],
+        "total_chars": total,
+        "truncated": end < total,
+        "next_start_index": end if end < total else None,
+    }

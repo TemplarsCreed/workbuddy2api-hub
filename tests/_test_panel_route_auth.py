@@ -36,6 +36,7 @@ import os
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -501,6 +502,37 @@ class BalanceSummaryTests(BoundaryCase):
         self.assertEqual(status, 200)
         self.assertIsNone(body["balance"])
         self.assertEqual(body["accounts_with_credit_data"], 0)
+
+    def test_codearts_query_key_reads_its_allowed_cached_balances(self):
+        wb_settings.set_api_keys(self.directory, [{
+            "id": "k1", "name": "k", "key": KEY, "enabled": True,
+            "realm": "codearts", "accounts": ["allowed", "unknown", "disabled"],
+        }])
+        proxy.wb_codearts.save_config(self.directory, {"enabled": True})
+        pool = SimpleNamespace(accounts=[
+            SimpleNamespace(uid="allowed", disabled=False, info={
+                "credits": {"total": {"remain": 5.25}}, "fetched_at": 123,
+            }),
+            SimpleNamespace(uid="unknown", disabled=False, info=None),
+            SimpleNamespace(uid="disabled", disabled=True, info={
+                "credits": {"total": {"remain": 50}}, "fetched_at": 300,
+            }),
+            SimpleNamespace(uid="excluded", disabled=False, info={
+                "credits": {"total": {"remain": 100}}, "fetched_at": 400,
+            }),
+        ])
+        with mock.patch.object(proxy.wb_codearts, "pool_for", return_value=pool) as cached:
+            status, body, raw = self.dispatch(
+                "/v1/balance-summary?key=" + KEY, {"X-Realm": "cn"})
+        cached.assert_called_once_with(self.directory, trigger_auto=False)
+        self.assertEqual(status, 200)
+        self.assertEqual(body, {
+            "balance": 5.25, "unit": "credit", "realm": "codearts",
+            "accounts_enabled": 2, "accounts_with_credit_data": 1,
+            "updated_at": 123.0,
+        })
+        self.assertNotIn('"uid"', raw)
+        self.assertNotIn('"excluded"', raw)
 
 
 if __name__ == "__main__":

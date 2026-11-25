@@ -202,6 +202,7 @@ def build_portable(version, tag, out_path, source=ROOT, runtime_dir=None,
         # wb_pricing.py's inlined snapshot for good.
         "profiles": {"app": [p for p in files
                               if (p.startswith("wb_") and p.endswith(".py"))
+                              or p.startswith("wb_webgateway/")
                               or p == "dashboard.html" or p in bridge_assets
                               or (bridge_assets and p.startswith("tools/wb-tls-bridge/"))]},
         # The runtime is one managed subtree rather than 500 manifest lines.

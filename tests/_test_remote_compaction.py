@@ -117,6 +117,16 @@ class SummaryCodecTests(unittest.TestCase):
         self.assertEqual("", proxy._decode_compaction_summary(""))
         self.assertEqual("", proxy._decode_compaction_summary(None))
 
+    def test_opaque_ciphertext_is_skipped_and_plain_summary_is_bounded(self):
+        opaque = "gAAAAA" + ("a9O-" * 30)
+        self.assertEqual("", proxy._decode_compaction_summary(opaque))
+        self.assertEqual("", proxy._decode_compaction_summary("a9O-" * 30))
+        text = "\u4f60" * proxy.COMPACTION_SUMMARY_MAX_BYTES
+        raw = proxy._encode_compaction_summary(text)
+        for value in (text, raw):
+            summary = proxy._decode_compaction_summary(value)
+            self.assertEqual(summary, text[:proxy.COMPACTION_SUMMARY_MAX_BYTES // 3])
+
 
 class RequestTranslationTests(unittest.TestCase):
     def _payload(self, extra=None):
@@ -173,6 +183,46 @@ class RequestTranslationTests(unittest.TestCase):
         self.assertEqual("system", chat["messages"][0]["role"])
         self.assertIn("earlier work summary", chat["messages"][0]["content"])
         self.assertEqual("continue", chat["messages"][1]["content"])
+
+    def test_commentary_reasoning_and_parallel_calls_share_one_message(self):
+        chat = proxy.responses_to_chat({"model": "m", "input": [
+            {"role": "assistant", "phase": "commentary", "content": "Checking",
+             "reasoning_content": "Already decided"},
+            {"type": "web_search_call", "id": "receipt"},
+            {"type": "reasoning", "summary": "Need tools"},
+            {"type": "function_call", "call_id": "one", "name": "read"},
+            {"type": "custom_tool_call", "call_id": "two", "name": "custom"},
+            {"role": "tool", "tool_call_id": "one", "content": ""},
+            {"type": "custom_tool_call_output", "call_id": "two", "output": "ok"},
+        ]})
+        assistant, *replies = chat["messages"]
+        self.assertEqual(assistant["content"], "Checking")
+        self.assertEqual(assistant["reasoning_content"], "Already decided\nNeed tools")
+        self.assertEqual([call["id"] for call in assistant["tool_calls"]], ["one", "two"])
+        self.assertEqual([reply["tool_call_id"] for reply in replies], ["one", "two"])
+
+    def test_replay_keeps_final_answers_and_opaque_checkpoint_boundaries(self):
+        answer = {"role": "assistant", "phase": "final_answer", "content": "Done"}
+        calls = [
+            {"type": "function_call", "call_id": "one", "name": "read"},
+            {"type": "function_call_output", "call_id": "one", "output": "ok"},
+        ]
+        cases = ([answer, *calls], [*calls, answer], [
+            {"role": "assistant", "phase": "commentary", "content": "Done"},
+            {"type": "compaction", "encrypted_content": "gAAAAA" + "abcd" * 30},
+            *calls,
+        ])
+        for items in cases:
+            with self.subTest(items=items):
+                chat = proxy.responses_to_chat({"model": "m", "input": items})
+                for build in (proxy.build_upstream_body, proxy.wb_codearts.build_chat_body):
+                    body = build(chat)
+                    assistant = [m for m in body["messages"] if m["role"] == "assistant"]
+                    self.assertEqual(len(assistant), 2)
+                    spoken = next(m for m in assistant if m["content"] == "Done")
+                    self.assertNotIn("tool_calls", spoken)
+                    self.assertNotIn("_wb_replay_boundary", json.dumps(body))
+                    self.assertNotIn("gAAAAA", json.dumps(body))
 
     def test_ordinary_turn_keeps_its_tools(self):
         payload = self._payload()

@@ -12,7 +12,7 @@
 # 做的事：
 #   1) 准备应用源码，校验版本号与 Makefile 的 PKG_VERSION 一致
 #   2) 按需构建/复用三个 linux Go 桥二进制（不指定则完全不打包桥）
-#   3) 只把 wb_*.py + dashboard.html（以及可选桥）暂存到 SDK 包目录
+#   3) 把 wb_*.py、wb_webgateway/ + dashboard.html（以及可选桥）暂存到 SDK 包目录
 #   4) make package/workbuddy2api/compile（-j1，低配机器/容器上更稳）
 #   5) 产物拷到 wrt/apk/workbuddy2api-<版本>-r<发布号>.apk 并打印 sha256
 #
@@ -184,7 +184,7 @@ fi
 
 # ---- 3. 暂存进 SDK 包目录 ---------------------------------------------------
 
-echo "==> 3/5 暂存应用源码进 SDK 包目录（只带 wb_*.py + dashboard.html + 可选桥）"
+echo "==> 3/5 暂存应用源码进 SDK 包目录（wb_*.py + wb_webgateway/ + dashboard.html + 可选桥）"
 [ -d "$SDK/package" ] || { echo "错误: SDK 缺少 package/ 目录: $SDK" >&2; exit 1; }
 SDK_PKG="$SDK/package/workbuddy2api"
 rm -rf "$SDK_PKG"
@@ -195,6 +195,7 @@ mkdir -p "$DST"
 for f in "$APP_SRC"/wb_*.py; do
 	cp "$f" "$DST/"
 done
+cp -R "$APP_SRC/wb_webgateway" "$DST/"
 cp "$APP_SRC/dashboard.html" "$DST/"
 if [ -n "$BRIDGE_DIR" ]; then
 	mkdir -p "$DST/bin"

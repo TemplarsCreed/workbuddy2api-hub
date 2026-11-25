@@ -136,11 +136,15 @@ const api = new Function(script + `
   return { applyAgent, restoreAgent, loadAgents,
            setAgents: window.__setAgents, setSelection: window.__setSelection,
            setModelsData: window.__setModelsData,
+           setViewRealm: function(r){ window.VIEW_REALM = r; },
+           setAccounts: function(list){ window.ACCOUNTS = list || []; },
            loadAgentsAvailability, switchMainTab,
            loadAgentModelSelection, applyModelPickAction, isModelPicked,
-           syncModelPickBoxes, saveModelSelection,
+           isSavedModelPicked, defaultModelPicked,
+           syncModelPickBoxes, saveModelSelection, loadModels,
            selection: function(){ return Array.from(AGENT_MODEL_SELECTION); },
            isConfigured: function(){ return MODEL_SELECTION_CONFIGURED; },
+           isDirty: function(){ return MODEL_SELECTION_DIRTY; },
            agentsAvailable: function(){ return AGENTS_AVAILABLE; },
            currentTab: function(){ return currentMainTab; } };`)();
 
@@ -305,6 +309,112 @@ const check = (label, cond, extra) => {
   check('全不选 ⇒ 计数写 0，一眼看得出没选',
         /已选 0/.test(element('availModelCount').textContent || ''),
         element('availModelCount').textContent);
+
+  // ---- 手动保存与默认 Pro Only 规则 -----------------------------------------
+  const INTL_MODELS = [
+    {id: 'intl-free', context_window: 128000},
+    {id: 'intl-pro', context_window: 200000, entitlement: {source: 'catalog', required: 'standard'}},
+  ];
+  const CN_MODELS = [
+    {id: 'cn-base', context_window: 128000},
+    {id: 'cn-pro-tag', context_window: 128000, entitlement: {source: 'catalog', required: 'standard'}},
+  ];
+  api.setViewRealm('intl');
+  api.setAccounts([{uid: 'u-free', realm: 'intl', enabled: true, tier: {paid: false}}]);
+  api.setModelsData(INTL_MODELS.slice());
+  SELECTED.configured = false;
+  SELECTED.models = [];
+  await api.loadAgentModelSelection();
+  check('未保存且无国际版 Pro 账号 ⇒ Pro Only 模型默认不勾选',
+        api.isModelPicked('intl-free') === true && api.isModelPicked('intl-pro') === false);
+  // 只有停用的国际版 Pro 或国内版 Pro 账号，仍不自动勾选国际版 Pro Only
+  api.setAccounts([
+    {uid: 'u-intl-disabled', realm: 'intl', enabled: false, tier: {paid: true}},
+    {uid: 'u-cn-paid', realm: 'cn', enabled: true, tier: {paid: true}},
+  ]);
+  check('停用国际版 Pro 或国内版 Pro 账号 ⇒ 不触发国际版 Pro Only 默认勾选',
+        api.isModelPicked('intl-pro') === false);
+  // 存在已启用的国际版 Pro 账号（tier.paid 或旧 credits.is_paid_user）时自动勾选
+  api.setAccounts([{uid: 'u-intl-paid', realm: 'intl', enabled: true, tier: {paid: true}}]);
+  check('存在已启用的国际版 Pro 账号 (tier.paid) ⇒ Pro Only 自动勾选',
+        api.isModelPicked('intl-pro') === true);
+  api.setAccounts([{uid: 'u-intl-legacy-paid', realm: 'intl', enabled: true, credits: {is_paid_user: true}}]);
+  check('存在已启用的国际版 Pro 账号 (credits.is_paid_user) ⇒ Pro Only 自动勾选',
+        api.isModelPicked('intl-pro') === true);
+  // 国内版默认全部勾选（即便带有 entitlement 标记、无付费账号）
+  api.setViewRealm('cn');
+  api.setAccounts([]);
+  api.setModelsData(CN_MODELS.slice());
+  check('国内版未保存时默认全部勾选',
+        api.isModelPicked('cn-base') === true && api.isModelPicked('cn-pro-tag') === true);
+
+  // 未点击「保存勾选」前，改动仅停留在本地草稿并显示「未保存」，不发请求也不改变一键配置清单
+  api.setViewRealm('intl');
+  api.setAccounts([{uid: 'u-free', realm: 'intl', enabled: true, tier: {paid: false}}]);
+  api.setModelsData(INTL_MODELS.slice());
+  api.setAgents({
+    clients: CLIENTS, keys: [], models: INTL_MODELS,
+    gateway: {base_url: 'http://127.0.0.1:8788/v1'},
+    model_embedding_clients: ['dsh'],
+  }, INTL_MODELS);
+  requests.length = 0;
+  fireDocument('change', {target: {
+    dataset: {modelId: 'intl-free'}, checked: false,
+    classList: {contains: name => name === 'model-pick'},
+  }});
+  check('勾选改动后标记为未保存，且不会立即触发 /agents/model-selection 请求',
+        api.isDirty() === true
+          && element('modelSelectionStatus').textContent === '未保存'
+          && !requests.some(r => r.url.indexOf('/agents/model-selection') !== -1));
+  check('未保存前一键配置仍读取已保存/默认清单而非草稿',
+        api.isSavedModelPicked('intl-free') === true && api.isSavedModelPicked('intl-pro') === false);
+  await api.applyAgent('claude-code', null);
+  const unsavedApplyReq = requests.find(r => r.url.indexOf('/agents/apply') !== -1);
+  const unsavedApplyBody = JSON.parse((unsavedApplyReq && unsavedApplyReq.opts.body) || '{}');
+  check('未保存前 applyAgent 仍使用未修改的默认清单（仅 intl-free）',
+        Array.isArray(unsavedApplyBody.models) && unsavedApplyBody.models.length === 1
+          && unsavedApplyBody.models[0] === 'intl-free',
+        JSON.stringify(unsavedApplyBody.models));
+
+  // 首次保存前若跨版本切换再保存，应保留已改版本选择并补全另一出口默认清单
+  global.fetch = (url, opts) => {
+    const u = String(url);
+    requests.push({url: u, opts: opts || {}});
+    if (u.indexOf('/v1/models?realm=cn') !== -1) {
+      const payload = {data: CN_MODELS.slice()};
+      return Promise.resolve({status: 200, ok: true,
+        json: () => Promise.resolve(payload), text: () => Promise.resolve(JSON.stringify(payload))});
+    }
+    if (u.indexOf('/v1/models?realm=intl') !== -1) {
+      const payload = {data: INTL_MODELS.slice()};
+      return Promise.resolve({status: 200, ok: true,
+        json: () => Promise.resolve(payload), text: () => Promise.resolve(JSON.stringify(payload))});
+    }
+    return realFetch(url, opts);
+  };
+  api.setViewRealm('cn');
+  await api.loadModels();
+  check('首次保存前切换到国内版，国内版未编辑模型仍保持默认勾选',
+        api.isModelPicked('cn-base') === true && api.isModelPicked('intl-free') === false);
+  requests.length = 0;
+  await Promise.all([api.saveModelSelection(), api.saveModelSelection()]);
+  const savePosts = requests.filter(r => r.url.indexOf('/agents/model-selection') !== -1);
+  const savedBody = JSON.parse((savePosts[0] && savePosts[0].opts.body) || '{}');
+  check('并发点击保存勾选只发一次请求，并清除未保存状态',
+        savePosts.length === 1 && api.isDirty() === false && element('modelSelectionStatus').textContent === '');
+  check('保存结果保留国际版取消的勾选并包含国内版默认模型',
+        Array.isArray(savedBody.models)
+          && savedBody.models.indexOf('intl-free') === -1
+          && savedBody.models.indexOf('intl-pro') === -1
+          && savedBody.models.indexOf('cn-base') !== -1,
+        JSON.stringify(savedBody.models));
+
+  api.setViewRealm('intl');
+  api.setModelsData(MODELS.slice());
+  global.fetch = (url, opts) => {
+    requests.push({url: String(url), opts: opts || {}});
+    return respond(url, opts);
+  };
 
   SELECTED.configured = true;
   select(['model-a', 'model-b']);

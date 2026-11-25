@@ -21,6 +21,22 @@ def clear_device_token_cache():
         )
 
 
+class HeaderSanitizerTests(unittest.TestCase):
+    def test_valid_ascii_is_trimmed(self):
+        self.assertEqual(
+            wb_accounts.sanitize_header_value("  device-token-1 \n"),
+            "device-token-1",
+        )
+
+    def test_unicode_and_header_injection_become_empty(self):
+        for value in ("设备令牌", "abc\nInjected: yes", "abc\rInjected: yes"):
+            self.assertEqual(wb_accounts.sanitize_header_value(value), "")
+
+    def test_empty_values_stay_empty(self):
+        for value in (None, "", "   "):
+            self.assertEqual(wb_accounts.sanitize_header_value(value), "")
+
+
 def make_account(directory, **extra):
     data = {
         "uid": "uid-device",

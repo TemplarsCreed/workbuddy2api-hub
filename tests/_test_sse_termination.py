@@ -31,6 +31,16 @@ class Read1Stream:
                 b'data: [DONE]\n\n')
 
 
+class ErrorAfterText:
+    """One text chunk followed by an in-band upstream error."""
+
+    def __iter__(self):
+        yield (b'data: {"id":"x","choices":[{"index":0,'
+               b'"delta":{"content":"partial"},"finish_reason":null}]}\n\n')
+        yield b'data: {"error":{"code":11140,"message":"account restricted"}}\n\n'
+        raise AssertionError('read after terminal error')
+
+
 @mock.patch.dict(os.environ, {"WB_STOP_AT_SSE_DONE": "1"})
 class ProtocolRegression(unittest.TestCase):
     def test_default_keeps_reading_after_done(self):
@@ -75,6 +85,25 @@ class ProtocolRegression(unittest.TestCase):
         self.assertIn(b'"finish_reason": "stop"', output)
         self.assertIn(b'"total_tokens": 2', output)
         self.assertIn(b'data: [DONE]\n\n', output)
+
+    def test_chat_error_after_text_is_terminal_and_not_counted_as_success(self):
+        output = io.BytesIO()
+        handler = types.SimpleNamespace(wfile=output, _key_id=lambda: "k-1")
+        account = types.SimpleNamespace(uid='test')
+        with mock.patch.object(proxy.wb_settings, 'egress_backoff_enabled',
+                               return_value=False), \
+             mock.patch.object(proxy, 'record_upstream_usage') as success, \
+             mock.patch.object(proxy, 'record_error') as error:
+            proxy.Handler._chat_stream_response(
+                handler, ErrorAfterText(), 'model', None, account,
+                time.time(), headers_sent=True)
+        body = output.getvalue()
+        self.assertIn(b'partial', body)
+        self.assertIn(b'"error"', body)
+        self.assertIn(b'11140', body)
+        self.assertNotIn(b'data: [DONE]\n\n', body)
+        error.assert_called_once()
+        success.assert_not_called()
 
 
 if __name__ == '__main__':

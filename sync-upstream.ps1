@@ -4,7 +4,8 @@ $ErrorActionPreference = 'Stop'
 Set-Location -Path $PSScriptRoot
 
 $base = 'baseline-v2.0.0'
-git fetch upstream --tags --prune
+# 上游已占用 v2.1.3-v2.2.3，与本 fork 自用线同名不同 SHA：绝不 --tags
+git fetch upstream --no-tags --prune
 $new = git log --oneline "$base..upstream/main"
 if (-not $new) {
     Write-Host "上游无新提交（相对 $base），无需同步。"

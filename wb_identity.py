@@ -79,12 +79,12 @@ DESKTOP_VERSION_INTL = "5.9.4"
 # 注意 Electron 主进程自己发的旁路请求（msg-center / conversations）UA 是
 # workbuddy-ai/... workbuddy-ai/...，两者不是同一条链路，别照抄错。
 DESKTOP_UA_INTL = "WorkBuddy/5.9.4 workbuddy-ai/5.9.4 CLI/2.165.0"
-# 国内版桌面端：2026-10-18 两区桌面端实跑（Go 版抓包记录）为 5.8.3、
-# 内置 CLI 2.161.0；第二段按国内版是 WorkBuddy（国际版是 workbuddy-ai）。
-# 本机只装了国际版 5.9.4，CN 的 5.9.4 版本号未能本地复核，沿用旧值。
-DESKTOP_VERSION_CN = "5.8.3"
-DESKTOP_UA_CN = "WorkBuddy/5.8.3 WorkBuddy/5.8.3 CLI/2.161.0"
-DESKTOP_CLI_CN = "2.161.0"
+# CN version defaults from workbuddy2api-panel v2026.11.21.939.
+DESKTOP_VERSION_CN = "5.11.3"
+DESKTOP_CLI_CN = "2.176.0"
+DESKTOP_UA_CN = (
+    f"WorkBuddy/{DESKTOP_VERSION_CN} WorkBuddy/{DESKTOP_VERSION_CN} CLI/{DESKTOP_CLI_CN}"
+)
 
 #: 官方 CodeBuddy CLI 的版本号：npm 包 @tencent-ai/codebuddy-code 的 package
 #: version。product.json 没有覆盖 platformVersion / productVersion，所以
@@ -213,8 +213,8 @@ _VERSION_OVERRIDES = {}
 
 
 def default_versions():
-    """A copy of the verified default version numbers."""
-    return dict(_VERSION_DEFAULTS)
+    """Default versions shown in the panel, including the CN CLI fallback."""
+    return {**_VERSION_DEFAULTS, "desktop_cli_cn": DESKTOP_CLI_CN}
 
 
 def configure_versions(overrides):
@@ -540,8 +540,7 @@ def build_identity_headers(product, realm, uid, token,
         compat = desktop_chat_compat_enabled(accounts_dir)
         headers.update(trace_headers(with_parent=compat))
         if compat:
-            # Desktop profile reported by workbuddy2api-panel's headers.go
-            # (CN 5.8.3 / intl 5.8.4); shared SDK values remain configurable.
+            # Shared SDK values remain configurable for the desktop profile.
             # Not a claim that Python's TLS stack matches the official client.
             sdk_headers = cli_stainless_headers()
             # Desktop request timeout is not verified; do not copy CLI's budget.

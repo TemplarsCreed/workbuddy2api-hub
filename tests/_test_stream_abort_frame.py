@@ -44,21 +44,23 @@ def jwt(uid="acct-stream-abort-1"):
         {"uid": uid, "exp": int(time.time()) + 86400 * 30}) + ".x"
 
 
-with open(os.path.join(ACCOUNTS, "acct1.json"), "w", encoding="utf-8") as fh:
-    json.dump({
-        "uid": "acct-stream-abort-1",
-        "accessToken": jwt(),
-        "refreshToken": "",
-        "expiresAt": int(time.time()) + 86400 * 30,
-        "realm": "intl",
-        "domain": "www.workbuddy.ai",
-        "platform": "CLI",
-        "product": "workbuddy",
-        "enabled": True,
-    }, fh)
+for index in (1, 2):
+    uid = "acct-stream-abort-%d" % index
+    with open(os.path.join(ACCOUNTS, "acct%d.json" % index), "w", encoding="utf-8") as fh:
+        json.dump({
+            "uid": uid,
+            "accessToken": jwt(uid),
+            "refreshToken": "",
+            "expiresAt": int(time.time()) + 86400 * 30,
+            "realm": "intl",
+            "domain": "www.workbuddy.ai",
+            "platform": "CLI",
+            "product": "workbuddy",
+            "enabled": True,
+        }, fh)
 
 UPSTREAM_PORT = life.free_port()
-MOCK = {"stream_calls": 0}
+MOCK = {"stream_calls": 0, "model_error": None, "audio_calls": 0}
 
 
 class MockUpstream(BaseHTTPRequestHandler):
@@ -67,12 +69,25 @@ class MockUpstream(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
+    def respond(self, payload, content_type, status=200):
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
         if length:
             self.rfile.read(length)
         if self.path.endswith("/chat/completions"):
             MOCK["stream_calls"] += 1
+            if MOCK["model_error"]:
+                if MOCK.get("error_http"):
+                    return self.respond(json.dumps(MOCK["model_error"]).encode("utf-8"),
+                                        "application/json", status=502)
+                data = "data: %s\n\ndata: [DONE]\n\n" % json.dumps(MOCK["model_error"])
+                return self.respond(data.encode("utf-8"), "text/event-stream")
             chunk = {"id": "up-1", "model": MODEL,
                      "choices": [{"index": 0, "delta": {"content": "partial answer"}}]}
             payload = ("data: " + json.dumps(chunk) + "\n\n").encode("utf-8")
@@ -86,6 +101,17 @@ class MockUpstream(BaseHTTPRequestHandler):
             self.wfile.flush()
             self.close_connection = True
             return
+        if self.path.endswith("/audio/speech"):
+            MOCK["audio_calls"] += 1
+            delta = {"type": "speech.audio.delta", "audio": {"data": "YWI="}}
+            payload = "data: %s\n\n" % json.dumps(delta)
+            if MOCK["audio_calls"] > 1:
+                payload = 'data: {"type":"speech.audio.delta","audio":{"data":"Y2Q="}}\n\n'
+                payload += 'data: {"type":"speech.audio.done"}\n\n'
+            return self.respond(payload.encode("utf-8"), "text/event-stream")
+        if self.path.endswith("/agenttool/v1/asr"):
+            MOCK["audio_calls"] += 1
+            return self.respond(b'{"code":0,"text":"recognized"}', "application/json")
         payload = b'{"data":{}}'
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -178,6 +204,21 @@ def parse_frames(raw):
     return frames
 
 
+def gateway_post(path, payload, content_type="application/json"):
+    data = json.dumps(payload).encode("utf-8") if isinstance(payload, dict) else payload
+    req = urllib.request.Request("http://127.0.0.1:%d%s" % (GATEWAY_PORT, path),
+                                 data=data, method="POST", headers={
+                                     "Content-Type": content_type,
+                                     "Authorization": "Bearer TESTKEY",
+                                 })
+    try:
+        with urllib.request.urlopen(req, timeout=30) as reply:
+            return reply.status, reply.headers, reply.read()
+    except urllib.error.HTTPError as exc:
+        with exc:
+            return exc.code, exc.headers, exc.read()
+
+
 try:
     if not wait_ready():
         print("  [FAIL] gateway did not start")
@@ -212,6 +253,64 @@ try:
     check("no [DONE] pretends the turn finished", "[DONE]" not in frames, frames)
     check("the stream was not retried after bytes were sent",
           MOCK["stream_calls"] == 1, MOCK["stream_calls"])
+
+    P.wb_settings.set_enable_anthropic_messages(ACCOUNTS, True)
+    for path, params in (
+        ("/v1/chat/completions", {"messages": [{"role": "user", "content": "hi"}]}),
+        ("/v1/responses", {"input": "hi"}),
+        ("/v1/messages", {"messages": [{"role": "user", "content": "hi"}], "max_tokens": 32}),
+    ):
+        for stream, failure in (
+            (False, {"error": {"code": 11102, "message": "model missing"}}),
+            (True, {"code": "11102", "msg": "model missing"}),
+        ):
+            MOCK["model_error"] = failure
+            count = MOCK["stream_calls"]
+            code, _, body = gateway_post(path, dict(params, model=MODEL, stream=stream))
+            check("%s stream=%s reports 11102 once" % (path, stream),
+                  code == (200 if stream else 400) and b"11102" in body
+                  and MOCK["stream_calls"] - count == 1, (code, body[:300]))
+            if stream:
+                check("%s omits a successful stream terminator" % path,
+                      all(terminal not in body for terminal in (
+                          b"[DONE]", b"response.completed", b"message_stop")), body[:300])
+
+    for error_code in (11103, 11152):
+        for http_error in (False, True):
+            count = MOCK["stream_calls"]
+            MOCK["model_error"] = {"error": {"code": error_code, "message": "invalid request"}}
+            MOCK["error_http"] = http_error
+            code, _, body = gateway_post("/v1/chat/completions", {
+                "model": MODEL, "stream": False,
+                "messages": [{"role": "user", "content": "hi"}],
+            })
+            check("%d HTTP error=%s is a single request failure" % (error_code, http_error),
+                  code == 400 and str(error_code).encode() in body
+                  and MOCK["stream_calls"] - count == 1, (code, body[:300]))
+
+    P.wb_settings.set_audio_enabled(ACCOUNTS, "tts", True)
+    P.wb_settings.set_audio_enabled(ACCOUNTS, "asr", True)
+    status, _, body = gateway_post("/v1/audio/speech", {"input": "test", "response_format": "pcm"})
+    check("a truncated TTS attempt retries without returning any partial audio",
+          status == 200 and body == b"cd" and MOCK["audio_calls"] == 2, (status, body))
+    for fmt, expected_status, expected_type in (
+        ("text", 200, "text/plain"),
+        ("json", 200, "application/json"),
+        ("vtt", 400, "application/json"),
+    ):
+        count = MOCK["audio_calls"]
+        raw = (b'--b\r\nContent-Disposition: form-data; name="file"\r\n\r\nRIFF\r\n'
+               b'--b\r\nContent-Disposition: form-data; name="response_format"\r\n\r\n'
+               + fmt.encode("ascii") + b'\r\n--b--\r\n')
+        status, headers, body = gateway_post("/v1/audio/transcriptions", raw,
+                                             "multipart/form-data; boundary=b")
+        check("ASR response_format=%s" % fmt,
+              status == expected_status and headers["Content-Type"].startswith(expected_type)
+              and (MOCK["audio_calls"] - count == (1 if expected_status == 200 else 0))
+              and (body == b"recognized" if fmt == "text" else
+                   json.loads(body).get("text") == "recognized" if fmt == "json" else
+                   json.loads(body)["error"]["code"] == "unsupported_audio_format"),
+              (status, body[:300]))
 finally:
     gateway.shutdown()
     upstream.shutdown()

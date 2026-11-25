@@ -18,6 +18,7 @@ RUN apk add --no-cache tzdata ca-certificates &&     cp /usr/share/zoneinfo/${TZ
 # Copy application files. The gateway itself uses only the standard library;
 # PyYAML is installed below solely for the optional subscription bridge.
 COPY wb_*.py dashboard.html ./
+COPY wb_webgateway/ ./wb_webgateway/
 COPY --from=tls-bridge /wb-tls-bridge /app/bin/wb-tls-bridge
 COPY tools/wb-tls-bridge/README.md /app/licenses/wb-tls-bridge/README.md
 COPY tools/wb-tls-bridge/licenses/ /app/licenses/wb-tls-bridge/

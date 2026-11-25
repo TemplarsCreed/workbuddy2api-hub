@@ -56,6 +56,10 @@ class DockerTests(unittest.TestCase):
         self.assertIn("HEALTHCHECK", text)
         self.assertIn("/health", text)
 
+    def test_webgateway_package_is_copied_into_the_image(self):
+        text = read("Dockerfile")
+        self.assertIn("COPY wb_webgateway/ ./wb_webgateway/", text)
+
     def test_compose_supports_puid_pgid(self):
         text = read("docker-compose.yml")
         self.assertIn("${PUID:-", text)

@@ -33,7 +33,7 @@
 #     ./prerm、./postrm。
 #   * data.tar.gz 里的路径带前缀 ./（如 ./usr/bin/workbuddy2api-warm）。
 #
-# 源文件：应用源码（wb_*.py + dashboard.html）与 build-apk.sh 同源——都取自
+# 源文件：应用源码（wb_*.py + wb_webgateway/ + dashboard.html）与 build-apk.sh 同源——都取自
 #   --app-src（默认就是本仓库检出），不手工复制内容，也不从网络拉取。元数据
 #   （版本 / 发布号 / 许可 / 维护者 / 依赖 / 描述）从 openwrt/*/Makefile 解析，
 #   避免两处维护；版本号本身以 wb_proxy.py 为准，与 Makefile 对不上就拒绝打包。
@@ -296,6 +296,12 @@ install_file "$PKG/files/usr/bin/workbuddy2api-warm"   "$DATA" usr/bin/workbuddy
 for _f in "$APP_SRC"/wb_*.py; do
 	install_file "$_f" "$DATA" "usr/lib/workbuddy2api/$(basename "$_f")" 0644
 done
+while IFS= read -r _f; do
+	_rel="${_f#"$APP_SRC"/}"
+	install_file "$_f" "$DATA" "usr/lib/workbuddy2api/$_rel" 0644
+done <<EOF
+$(find "$APP_SRC/wb_webgateway" -type f -name '*.py' | sort)
+EOF
 install_file "$APP_SRC/dashboard.html" "$DATA" usr/lib/workbuddy2api/dashboard.html 0644
 if [ "$BRIDGE_MODE" = none ]; then
 	echo "    uTLS bridge: 未包含（运行时为 auto，缺桥会回退 Python/OpenSSL）"

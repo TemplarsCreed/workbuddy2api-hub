@@ -5,6 +5,9 @@ accounts/agent-backups/
 
 # 运行时日志和用量统计
 usage/*.jsonl
+usage/*.jsonl.lock
+usage/*.jsonl.archive.lock
+usage/*.jsonl.segments/
 usage/*.json
 usage/*.sqlite3
 usage/*.sqlite3-journal

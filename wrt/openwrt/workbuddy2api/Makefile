@@ -21,11 +21,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=workbuddy2api
-PKG_VERSION:=2.2.4
+PKG_VERSION:=2.3.0
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT
-PKG_MAINTAINER:=ardeyouxipianyi
+PKG_MAINTAINER:=niyouqianma
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -55,7 +55,7 @@ define Package/workbuddy2api
   SECTION:=net
   CATEGORY:=Network
   TITLE:=WorkBuddy multi-account gateway with OpenAI-compatible API
-  URL:=https://github.com/ardeyouxipianyi/workbuddy2api-hub
+  URL:=https://github.com/niyouqianma/workbuddy2api-hub
   DEPENDS:=+python3-light +python3-urllib +python3-uuid +python3-openssl +python3-sqlite3 +python3-codecs
   PKGARCH:=all
 endef
@@ -99,6 +99,12 @@ endef
 define Package/workbuddy2api/install
 	$(INSTALL_DIR) $(1)/usr/lib/workbuddy2api
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_*.py $(1)/usr/lib/workbuddy2api/
+	$(INSTALL_DIR) $(1)/usr/lib/workbuddy2api/wb_webgateway
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/*.py $(1)/usr/lib/workbuddy2api/wb_webgateway/
+	$(INSTALL_DIR) $(1)/usr/lib/workbuddy2api/wb_webgateway/protocols
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/protocols/*.py $(1)/usr/lib/workbuddy2api/wb_webgateway/protocols/
+	$(INSTALL_DIR) $(1)/usr/lib/workbuddy2api/wb_webgateway/providers
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/providers/*.py $(1)/usr/lib/workbuddy2api/wb_webgateway/providers/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/dashboard.html $(1)/usr/lib/workbuddy2api/
 	[ -z "$(BRIDGE_BINS)" ] || { \
 		$(INSTALL_DIR) $(1)/usr/lib/workbuddy2api/bin; \

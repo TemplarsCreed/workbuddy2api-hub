@@ -17,7 +17,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'dashboard.html'), 'utf8
 // Exercise the current analytics page while its first request is still pending.
 async function testAnalyticsPolling() {
   const start = html.indexOf('let WBA_GEN = 0;');
-  const end = html.indexOf('async function loadStatic()', start);
+  const end = html.indexOf('/* ---------------- KPI', start);
   assert.ok(start > 0 && end > start);
   const calls = [];
   let release;
@@ -25,18 +25,25 @@ async function testAnalyticsPolling() {
   const state = {range: 'month'};
   const api = url => { calls.push(url); return pending; };
   const noop = () => {};
-  const factory = new Function('state', 'api', '$', 'rangeParams', 'pollUntil',
-    'loadPrevSummary', 'renderKpis', 'renderSeriesMeta', 'drawSeries', 'drawSparks',
-    'renderDim', 'loadRecent', html.slice(start, end) + '\nreturn loadRange;');
-  const load = factory(state, api, () => ({style: {}}), r => 'range=' + r,
-    () => 1, () => pending, noop, noop, noop, noop, noop, noop);
+  const factory = new Function('state', 'api', '$', 'renderKpis', 'renderSeriesMeta',
+    'drawSeries', 'drawSparks', 'renderDim', 'renderPerfFold', 'buildHeatGrid',
+    'fromLocalInputValue', 'prevSummary', html.slice(start, end) + '\nreturn loadRange;');
+  const load = factory(state, api, () => ({style: {}, value: ''}),
+    noop, noop, noop, noop, noop, noop, noop, () => 123, null);
   const first = load(true);
   await load(true);
-  assert.strictEqual(calls.length, 2, 'polling must not start a duplicate request');
-  release({});
+  assert.strictEqual(calls.length, 1, 'polling must not start a duplicate request');
+  release({revision: '2', core: {analytics: {}, series: {}}});
   await first;
   await load(true);
-  assert.strictEqual(calls.length, 4, 'polling must resume after completion');
+  assert.strictEqual(calls.length, 2, 'polling must resume after completion');
+  assert.match(calls[1], /[?&]rev=2/);
+  state.range = 'custom';
+  await load(false);
+  await load(true);
+  assert.strictEqual(calls.length, 3, 'closed periods stop polling');
+  await load(false, true);
+  assert.match(calls[3], /[?&]refresh=1/);
 }
 testAnalyticsPolling().catch(err => { console.error(err); process.exitCode = 1; });
 

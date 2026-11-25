@@ -737,10 +737,14 @@ class MockHandler:
 # Patch integrate and restore targets to use our isolated home10
 orig_integrate = A.integrate
 orig_restore = A.restore
+orig_accounts_dir26 = wb_proxy.ACCOUNTS_DIR
+orig_pool26 = wb_proxy.POOL
 A.integrate = lambda acct, cid, base_url, key, model=None, models=None, home=None: \
     orig_integrate(acct10, cid, base_url, key, model=model, models=models, home=home10)
 A.restore = lambda acct, cid, home=None: \
     orig_restore(acct10, cid, home=home10)
+wb_proxy.ACCOUNTS_DIR = acct10
+wb_proxy.POOL = None
 
 try:
     handler = MockHandler(acct10, home10)
@@ -779,6 +783,8 @@ try:
 finally:
     A.integrate = orig_integrate
     A.restore = orig_restore
+    wb_proxy.ACCOUNTS_DIR = orig_accounts_dir26
+    wb_proxy.POOL = orig_pool26
 
 print()
 print("[27] rollback restores a pre-existing file from its backup (NameError regression)")
@@ -1021,6 +1027,99 @@ check("top-level keys survive the cleanup",
       'model_provider = "wb-proxy"' in codex_out and 'model = "m1"' in codex_out,
       codex_out)
 shutil.rmtree(seed_dir, ignore_errors=True)
+
+print()
+print("[32] _handle_agents_apply filters intl Pro Only fallback by enabled intl paid account")
+import wb_accounts
+home32 = tempfile.mkdtemp(prefix="wb-agents-home32-")
+acct32 = tempfile.mkdtemp(prefix="wb-agents-acct32-")
+orig_integrate32 = A.integrate
+orig_restore32 = A.restore
+orig_accounts_dir32 = P.ACCOUNTS_DIR
+orig_pool32 = P.POOL
+
+class _FakePool32:
+    def __init__(self, accounts):
+        self.accounts = accounts
+
+class _ProFallbackHandler32:
+    def __init__(self, realm="intl"):
+        self.realm = realm
+        self.response = None
+    def _agents_resolve_key(self, payload, warnings):
+        return "sk-test-32"
+    def _agents_realm(self, payload=None):
+        return (payload or {}).get("realm") or self.realm
+    def _agents_models(self, realm=None):
+        if realm == "intl":
+            return [
+                {"id": "intl-free", "context_window": 128000},
+                {"id": "intl-pro", "context_window": 200000,
+                 "entitlement": {"source": "catalog", "required": "standard"}},
+            ]
+        return [
+            {"id": "cn-base", "context_window": 128000},
+            {"id": "cn-tagged", "context_window": 128000,
+             "entitlement": {"source": "catalog", "required": "standard"}},
+        ]
+    def _json(self, code, obj):
+        self.response = (code, obj)
+        return (code, obj)
+    def _error(self, code, msg, typ=""):
+        self.response = (code, {"error": msg, "type": typ})
+        return (code, {"error": msg})
+
+A.integrate = lambda acct, cid, base_url, key, model=None, models=None, home=None: \
+    orig_integrate(acct32, cid, base_url, key, model=model, models=models, home=home32)
+A.restore = lambda acct, cid, home=None: \
+    orig_restore(acct32, cid, home=home32)
+P.ACCOUNTS_DIR = acct32
+try:
+    opencode32 = os.path.join(home32, ".config", "opencode", "opencode.json")
+    def _applied_models(realm_val, accounts_list):
+        P.POOL = _FakePool32(accounts_list)
+        h = _ProFallbackHandler32(realm=realm_val)
+        code32, res32 = P.Handler._handle_agents_apply(h, {
+            "client_id": "opencode",
+            "base_url": "http://127.0.0.1:8788/v1",
+            "key_id": "",
+            "realm": realm_val,
+        })
+        assert code32 == 200, (code32, res32)
+        with open(opencode32, "r", encoding="utf-8") as fh:
+            cfg32 = json.load(fh)
+        return set(((cfg32.get("provider") or {}).get("wb-proxy") or {}).get("models") or {})
+
+    free_intl = wb_accounts.Account({"uid": "f1", "realm": "intl", "accessToken": "t",
+                                     "enabled": True, "tier": {"paid": False}})
+    disabled_pro_intl = wb_accounts.Account({"uid": "p0", "realm": "intl", "accessToken": "t",
+                                             "enabled": False, "tier": {"paid": True}})
+    pro_cn = wb_accounts.Account({"uid": "pcn", "realm": "cn", "accessToken": "t",
+                                  "enabled": True, "tier": {"paid": True}})
+    pro_intl_tier = wb_accounts.Account({"uid": "p1", "realm": "intl", "accessToken": "t",
+                                         "enabled": True, "tier": {"paid": True}})
+    pro_intl_legacy = wb_accounts.Account({"uid": "p2", "realm": "intl", "accessToken": "t",
+                                           "enabled": True, "credits": {"is_paid_user": True}})
+
+    m_free = _applied_models("intl", [free_intl, disabled_pro_intl, pro_cn])
+    check("intl fallback omits Pro Only without an enabled intl paid account",
+          m_free == {"intl-free"}, m_free)
+    m_tier = _applied_models("intl", [free_intl, pro_intl_tier])
+    check("intl fallback includes Pro Only with enabled intl tier.paid account",
+          m_tier == {"intl-free", "intl-pro"}, m_tier)
+    m_legacy = _applied_models("intl", [pro_intl_legacy])
+    check("intl fallback includes Pro Only with enabled intl credits.is_paid_user account",
+          m_legacy == {"intl-free", "intl-pro"}, m_legacy)
+    m_cn = _applied_models("cn", [])
+    check("cn fallback keeps all models by default",
+          m_cn == {"cn-base", "cn-tagged"}, m_cn)
+finally:
+    A.integrate = orig_integrate32
+    A.restore = orig_restore32
+    P.ACCOUNTS_DIR = orig_accounts_dir32
+    P.POOL = orig_pool32
+    shutil.rmtree(home32, ignore_errors=True)
+    shutil.rmtree(acct32, ignore_errors=True)
 
 print("PASS=%d FAIL=%d" % (PASS, FAIL))
 sys.exit(1 if FAIL else 0)

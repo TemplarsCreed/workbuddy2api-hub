@@ -87,8 +87,8 @@ assert.equal(byId('workbuddyAccountsSection').style.display, 'none',
   'CodeArts 视图应隐藏 WorkBuddy 账号区');
 assert.equal(byId('workbuddyDisabledSection').style.display, 'none',
   'CodeArts 视图应隐藏 WorkBuddy 禁用区');
-assert.equal(byId('workbuddyActivitySection').style.display, 'none',
-  'CodeArts 视图应隐藏 WorkBuddy 活动区');
+assert.equal(byId('workbuddyActivitySection').style.display, '',
+  '签到与活跃记录在自动化页且含 CodeArts 记录，CodeArts 视图下不应隐藏');
 assert.equal(byId('tabCodeartsHealthy').textContent, 1,
   'CodeArts 卡片应显示健康账号数');
 assert.equal(byId('tabCodeartsModels').textContent, 1,

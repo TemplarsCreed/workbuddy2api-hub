@@ -230,6 +230,32 @@ class TextPool(object):
                 values = list(self.pool.accounts)
         return [a for a in values if self.allows(a)]
 
+    def empty_detail(self, realm=None):
+        """Text-pool equivalent of ``MediaPool.empty_detail``.
+
+        Audio uses the text pool, so its "no usable account" reply should point
+        at the same pool boundary instead of leaking an AttributeError.
+        """
+        if self.pool is None:
+            return "账号池未加载。"
+        if not scope_mod.entry_allows(scope_mod.SCOPE_TEXT):
+            return "这个入口只服务图片 / 视频生成，不提供文本或音频请求。"
+        lock = getattr(self.pool, "_lock", None)
+        if lock is None:
+            accounts = list(getattr(self.pool, "accounts", ()) or ())
+        else:
+            with lock:
+                accounts = list(self.pool.accounts)
+        media_accounts = 0
+        for account in accounts:
+            if realm and account.realm != realm:
+                continue
+            if scope_mod.account_scope(account) == scope_mod.SCOPE_MEDIA:
+                media_accounts += 1
+        if scope_mod.separation_enabled() and media_accounts:
+            return "文本号池里没有账号：请把用于文本 / 音频的账号设为「文本号池」。"
+        return "没有可用账号。"
+
     def get(self, uid):
         """按 uid 取文本号池里的账号；属于媒体号池则返回 None。"""
         if self.pool is None:

@@ -36,12 +36,14 @@ assert.ok(/loadAccounts\(false, \{deferActivity: true\}\)/.test(boot),
 
 const settingsAt = boot.indexOf('loadSettings(false, {deferSecondary: true})');
 const initRealmAt = boot.indexOf('await initRealm()');
-const coreAt = boot.indexOf('await Promise.all([\n    loadAccounts(false, {deferActivity: true}),\n    refresh(),\n  ])');
+const coreAt = boot.indexOf('await Promise.all([\n    loadAccounts(false, {deferActivity: true}),\n    initialTab');
 const secondaryAt = boot.indexOf('const secondary = Promise.all([');
 assert.ok(settingsAt >= 0 && initRealmAt > settingsAt,
   '设置读取后仍需先确定 realm');
 assert.ok(secondaryAt > initRealmAt, '非首屏请求应在 realm 确定后再启动');
 assert.ok(coreAt > secondaryAt, '核心首屏数据必须单独等待，不能混进 secondary');
+assert.ok(boot.indexOf("if(initialTab === 'analytics') switchMainTab(initialTab)") < coreAt);
+assert.ok(boot.includes("initialTab === 'analytics' ? Promise.resolve() : refresh()"));
 
 for(const name of ['loadModels()', 'loadAgentModelSelection()',
                    'loadSchedulerStatus()', 'loadAgentsAvailability()']){

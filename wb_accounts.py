@@ -49,6 +49,11 @@ PROFILE_PATH = "/console/account"
 WEB_USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0")
 DAILY_CHAT_MODEL = "deepseek-v4.1-flash"
+#: 上游以 ``free`` 命名、但可能缺席定价目录的已确认零成本模型基线；
+#: 由 ``wb_proxy.free_models_by_realm()`` 在目录未标非零价格时纳入免费名单，
+#: 任意 ``*free`` 名称不行。账号层本身只认 ``self.free_models``，保证目录
+#: 显式标价收费时能按区域回收免费豁免。
+CONFIRMED_FREE_MODEL_IDS = frozenset({"hy4flash-free", "hy4free"})
 DAILY_CHAT_WEB_PROMPT = "Hi"
 #: 网页通道一轮最多等多久（秒）。实测一次「Hi」十几秒就跑完，留足余量。
 #: 没配 settings 的账号（如单测里手工构造的）用它兜底。
@@ -557,6 +562,28 @@ def jwt_uid(token):
 
 def jwt_issuer(token):
     return str(_jwt_claims(token).get("iss") or "")
+
+
+def sanitize_header_value(value):
+    """Return a header-safe value or an empty string.
+
+    Device tokens are imported from user files and may contain a newline or a
+    non-ASCII character. Passing those to ``http.client`` raises
+    UnicodeEncodeError (or lets a newline split the header), so a malformed
+    value must degrade to "no device token" instead of breaking every request.
+    The account file is left untouched so a later corrected token can be used.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        text.encode("ascii")
+    except UnicodeEncodeError:
+        return ""
+    if "\r" in text or "\n" in text:
+        return ""
+    return text
+
 
 def normalize_epoch(value):
     try:
@@ -1724,7 +1751,15 @@ class Account(object):
 
     def model_is_free(self, model):
         """True when the realm catalogue marks `model` as a free one."""
-        return bool(model) and model in (self.free_models or ())
+        if not model or not self.free_models:
+            return False
+        if model in self.free_models:
+            return True
+        low = str(model).strip().lower()
+        if not low:
+            return False
+        return any(str(entry).strip().lower() == low
+                   for entry in self.free_models)
 
     def credit_limit_reached(self):
         """True when today's counted spend reached the daily credit limit.
@@ -2224,12 +2259,12 @@ class Account(object):
         """Optional X-Device-Token: account value, then literal, then file."""
         token = str(getattr(self, "device_token", "") or "").strip()
         if token:
-            return token
+            return sanitize_header_value(token)
         directory = (getattr(self, "accounts_dir", "")
                      or (os.path.dirname(self.path) if self.path else ""))
         if not directory:
             return ""
-        return resolve_device_token(directory)
+        return sanitize_header_value(resolve_device_token(directory))
 
     def sync_nickname(self):
         """Manual web-console nickname refresh.
@@ -4323,12 +4358,30 @@ class CreditsRefresher(threading.Thread):
     refresh age settles a little above the TTL. That is the intended trade:
     the preference is measured in days, so a few extra hours of drift is worth
     far less than the calls it saves.
+
+    The first tick after a start is the one exception to the half-hour rhythm:
+    it fires after FIRST_TICK_DELAY (20s) instead of a full interval, because a
+    restart would otherwise serve a stale on-disk snapshot for the whole first
+    tick. One refresh of a CN account is 3-6 billing requests in the normal case
+    (summary + free/paid package pages + check-in probe), not a single call, so
+    each process start spends roughly one extra refresh's worth. The
+    steady-state cap of 48 refreshes a day is unchanged; a deployment that
+    restarts often should read this constant as "restart frequency buys billing
+    calls", not as a free change.
     """
 
-    def __init__(self, pool, interval_seconds=1800):
+    def __init__(self, pool, interval_seconds=1800, warm_start=None, warm_gap=2.0):
         super().__init__(daemon=True, name="credits-refresher")
         self.pool = pool
         self.interval_seconds = max(60.0, float(interval_seconds))
+        # 启动后第一轮刷全部账号，而不是只刷一个。余额是调度与保留线的输入，
+        # 而重启时内存里只有磁盘上那份可能几小时前的快照；只刷一个账号意味着
+        # 其余账号仍按旧余额放行请求。整个过程跑在本线程里，服务不等它。
+        if warm_start is None:
+            raw = os.environ.get("WB_CREDITS_WARM_START", "1").strip().lower()
+            warm_start = raw not in ("0", "false", "no", "off")
+        self.warm_start = bool(warm_start)
+        self.warm_gap = max(0.0, float(warm_gap))
         self.last_run = None
         self.last_uid = None
         self.last_error = None
@@ -4392,6 +4445,33 @@ class CreditsRefresher(threading.Thread):
                 chosen, chosen_age = account, age
         return chosen
 
+    def _refresh_account(self, account, now=None):
+        """Refresh one account and record the outcome; returns its uid or None."""
+        try:
+            result = account.fetch_credits()
+        except Exception as exc:
+            result = {"ok": False, "error": str(exc)}
+        if not isinstance(result, dict) or not result.get("ok"):
+            error = (result or {}).get("error") or "unknown error"
+            self._parked[account.uid] = \
+                (time.time() if now is None else now) + self._failed_cooldown
+            self.last_error = str(error)
+            self.log("刷新 %s 积分失败，暂缓一小时: %s"
+                     % (account.uid[:8], error))
+            return None
+        self.last_run = time.time() if now is None else now
+        self.last_uid = account.uid
+        self.last_error = None
+        self.log("已刷新 %s 的积分（%s）"
+                 % (account.uid[:8], (account.credits or {}).get("updated_iso")))
+        tier = result.get("tier") if isinstance(result, dict) else None
+        if isinstance(tier, dict):
+            self.log("已读取 %s 的账号档位：%s%s"
+                     % (account.uid[:8],
+                        "付费" if tier.get("paid") else "免费",
+                        (" · " + tier["package"]) if tier.get("package") else ""))
+        return account.uid
+
     def refresh_once(self, now=None):
         """Refresh one stale account; returns its uid, or None when none was due."""
         ttl = self.ttl_seconds()
@@ -4401,39 +4481,74 @@ class CreditsRefresher(threading.Thread):
             account = self.stalest_account(ttl, now=now)
             if account is None:
                 return None
-            try:
-                result = account.fetch_credits()
-            except Exception as exc:
-                result = {"ok": False, "error": str(exc)}
-            if not isinstance(result, dict) or not result.get("ok"):
-                error = (result or {}).get("error") or "unknown error"
-                self._parked[account.uid] = \
-                    (time.time() if now is None else now) + self._failed_cooldown
-                self.last_error = str(error)
-                self.log("刷新 %s 积分失败，暂缓一小时: %s"
-                         % (account.uid[:8], error))
-                return None
-            self.last_run = time.time() if now is None else now
-            self.last_uid = account.uid
-            self.last_error = None
-            self.log("已刷新 %s 的积分（%s）"
-                     % (account.uid[:8], (account.credits or {}).get("updated_iso")))
-            tier = result.get("tier") if isinstance(result, dict) else None
-            if isinstance(tier, dict):
-                self.log("已读取 %s 的账号档位：%s%s"
-                         % (account.uid[:8],
-                            "付费" if tier.get("paid") else "免费",
-                            (" · " + tier["package"]) if tier.get("package") else ""))
-            return account.uid
+            return self._refresh_account(account, now=now)
+
+    def warm_sweep(self, now=None):
+        """Refresh every eligible account once, paced; returns how many ran.
+
+        Runs on the refresher thread, so the server keeps serving while the
+        balances catch up. Without it the first tick fixes one account and the
+        rest keep the on-disk snapshot until their turn comes - hours later on
+        a larger pool - while the reserve guard reads those stale numbers.
+        """
+        if not self.warm_start:
+            return 0
+        with self.pool._lock:
+            accounts = [a for a in self.pool.accounts
+                        if a.enabled and a.access_token]
+        stamp = time.time() if now is None else now
+        done = 0
+        for index, account in enumerate(accounts):
+            if self._stop_event.is_set():
+                break
+            if index and self.warm_gap > 0:
+                # 可中断等待：停止信号在间隔里到达时不要再发下一个请求。
+                if self._stop_event.wait(timeout=self.warm_gap):
+                    break
+            if self._stop_event.is_set():
+                break
+            if self._parked.get(account.uid, 0) > stamp:
+                continue
+            self._refresh_account(account, now=now)
+            done += 1
+        self.log("启动预热：已刷新 %d/%d 个账号" % (done, len(accounts)))
+        return done
+
+    #: 启动后第一次 tick 的等待时间。
+    #:
+    #: 用短等待而不是「立刻刷」：`refresh_once()` 会同步打上游计费接口
+    #: （summary 超时 15 秒、CN 详细路径还有 30 秒的 fallback），放在进程启动
+    #: 的第一瞬间会和登录、面板首屏抢同一条出口。20 秒只是把这次调用从「进程刚
+    #: 起来的那一刻」挪开一点，它**并不**与启动阶段的所有一次性工作完全错开——
+    #: 调度器的初次巡检在 t≈10s 开始，更新检查器在 t≈30s，都可能与这一轮重叠。
+    #: 重叠本身是安全的（`fetch_credits()` 有 `_credits_lock`，同一账号不会并发
+    #: 打上游），代价只是某些启动方式下可能多一次计费请求。
+    #:
+    #: 调用方（wb_proxy 的 _bootstrap_runtime）已经同步跑完 POOL.load() 和
+    #: SCHEDULER.start()，所以这里不需要靠等待来规避「池子还没填好」的竞态。
+    FIRST_TICK_DELAY = 20.0
 
     def run(self):
+        # 第一轮用最短延迟：重启后磁盘上的快照可能已经超过 TTL，等满一个
+        # interval_seconds 就意味着用户要盯着昨天（甚至前天）的数字半小时。
+        delay = self.FIRST_TICK_DELAY
+        warmed = False
         while not self._stop_event.is_set():
-            self._wake.wait(timeout=self.interval_seconds)
+            self._wake.wait(timeout=delay)
+            delay = self.interval_seconds
             if self._stop_event.is_set():
                 break
             self._wake.clear()
             try:
-                self.refresh_once()
+                # 首次 tick 刷全部账号；关闭预热时保留旧的首轮单账号刷新，
+                # 否则关闭预热会连原来的第一次刷新都跳过。
+                # 整个过程只在本线程里跑，服务不等它完成。
+                if not warmed and self.warm_start:
+                    warmed = True
+                    self.warm_sweep()
+                else:
+                    warmed = True
+                    self.refresh_once()
             except Exception as exc:
                 self.last_error = str(exc)
                 self.log("刷新循环异常: %s" % exc)

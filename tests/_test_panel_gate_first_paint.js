@@ -32,6 +32,8 @@ assert.ok(/display:flex/.test(gateTag[0]),
   '#panelGate 必须默认可见（display:flex）：默认 none 会让首帧先画出看板骨架再盖住');
 assert.ok(!/display:none/.test(gateTag[0]),
   '#panelGate 不能默认 display:none（那正是闪烁的成因）');
+assert.match(html, /<input id="panelPwdInput"[^>]*\bdisabled\b/);
+assert.match(html, /<input id="setIdentityVersionPassword"[^>]*autocomplete="off"[^>]*\bdisabled\b/);
 
 /* ---- 2. 首帧判定在 <head>，且与 PANEL_STORE 用同一个令牌键 ------------- */
 
@@ -128,12 +130,28 @@ page.panelNeedsLogin();
 assert.ok(!root.classList.contains('wb-panel-session'),
   'panelNeedsLogin() 必须先摘掉 html.wb-panel-session，否则 !important 会压住内联的 display:flex');
 assert.strictEqual(gate.style.display, 'flex', 'panelNeedsLogin() 要把闸门显示出来');
+const panelPassword = page.document.getElementById('panelPwdInput');
+assert.strictEqual(panelPassword.disabled, false);
 
 root.classList.add('wb-panel-session');
+panelPassword.value = 'entered-value';
 page.panelHideGate();
 assert.ok(!root.classList.contains('wb-panel-session'),
   'panelHideGate() 也要摘类，让「有类 ⇔ 首帧判定隐藏了闸门」这条不变式只作用于启动阶段');
 assert.strictEqual(gate.style.display, 'none', 'panelHideGate() 要把闸门藏起来');
+assert.strictEqual(panelPassword.disabled, true);
+assert.strictEqual(panelPassword.value, '');
+
+const editor = page.document.getElementById('identityVersionEditor');
+const editorPassword = page.document.getElementById('setIdentityVersionPassword');
+editor.style.display = 'none';
+page.toggleIdentityVersionEditor();
+assert.strictEqual(editorPassword.disabled, false);
+editorPassword.value = 'entered-value';
+page.toggleIdentityVersionEditor(false);
+assert.strictEqual(editor.style.display, 'none');
+assert.strictEqual(editorPassword.disabled, true);
+assert.strictEqual(editorPassword.value, '');
 
 /* ---- 5. ?pwd= 登录失败：闸门必须留在屏幕上（旧行为是永久空白看板） ---- */
 

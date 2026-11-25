@@ -692,6 +692,66 @@ class AnthropicHeaderFingerprintTests(unittest.TestCase):
         self.assertEqual(out[0]["content"], [image])
 
 
+class TraeCodeIntroFingerprintTests(unittest.TestCase):
+    """Trae 客户端（TraeCode）自述首句。
+
+    2026-11-24 本机 CN 号池实测：上游按连续短语
+    ``You are an interactive agent in TraeCode`` 判非官方渠道，回 400 / 11128。
+    单独 ``TraeCode``、``in Trae IDE``、``in Cursor`` 均 200；只删掉
+    ``in TraeCode`` 之后，真实 23KB system（21 个工具）整体 200。因此规则只删
+    这一段短语，保留 Trae 的其余行为指令。
+    """
+
+    INTRO = ("You are an interactive agent in TraeCode that helps the USER with "
+             "software engineering tasks. Use the instructions below.")
+    CLEAN = ("You are an interactive agent that helps the USER with "
+             "software engineering tasks. Use the instructions below.")
+
+    def test_intro_rewritten(self):
+        self.assertTrue(P.has_fingerprint(self.INTRO))
+        out = P.sanitize_text(self.INTRO)
+        self.assertEqual(out, self.CLEAN)
+        self.assertFalse(P.has_fingerprint(out))
+
+    def test_case_insensitive(self):
+        # 前缀按替换文本原样输出，大小写不随原文；只要短语和品牌不再出现。
+        for text in (self.INTRO.lower(), self.INTRO.upper()):
+            out = P.sanitize_text(text)
+            self.assertNotIn("traecode", out.lower(), text)
+            self.assertIn("interactive agent that helps", out.lower(), text)
+
+    def test_idempotent(self):
+        once = P.sanitize_text(self.INTRO)
+        self.assertEqual(P.sanitize_text(once), once)
+
+    def test_scoped_to_system_developer_and_assistant(self):
+        out = P.sanitize_messages([
+            {"role": "system", "content": self.INTRO},
+            {"role": "developer", "content": self.INTRO},
+            {"role": "assistant", "content": self.INTRO},
+            {"role": "user", "content": self.INTRO},
+            {"role": "tool", "content": self.INTRO},
+        ])
+        for i in range(3):
+            self.assertEqual(out[i]["content"], self.CLEAN, out[i]["role"])
+        self.assertEqual(out[3]["content"], self.INTRO)
+        self.assertEqual(out[4]["content"], self.INTRO)
+
+    def test_brand_alone_and_other_ides_untouched(self):
+        for text in ("TraeCode", "You are an interactive agent in Trae IDE that helps.",
+                     "You are an interactive agent in Cursor that helps."):
+            self.assertEqual(P.sanitize_text(text), text)
+
+    def test_wire_body_carries_the_rewrite(self):
+        body = P.build_upstream_body({
+            "model": "deepseek-v4.1-flash",
+            "messages": [{"role": "system", "content": self.INTRO},
+                         {"role": "user", "content": "hi"}]})
+        system = body["messages"][0]["content"]
+        self.assertNotIn("in TraeCode", system)
+        self.assertIn("You are an interactive agent that helps", system)
+
+
 if __name__ == "__main__":
     unittest.main()
 

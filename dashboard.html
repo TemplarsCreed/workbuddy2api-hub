@@ -158,6 +158,16 @@ section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
    区块自带的 padding-top 挪给吸顶的首行（它要盖住滚上来的内容），故置 0；
    首行的 margin 也折成 padding，否则吸顶后下方那条 margin 会漏出滚动内容。 */
 body.win-capped .main-page section{max-height:var(--win-max-h);overflow-y:auto;padding-top:0}
+/* 账号区保留筛选和操作栏，滚动限制应用到账号表本身。 */
+body.win-capped .main-page #workbuddyAccountsSection{max-height:none;overflow:visible}
+body.win-capped #accounts .table-wrap{max-height:max(180px, calc(var(--win-max-h) - 180px));overflow:auto}
+@media (min-width:641px){
+  body.win-capped #accounts .account-cards{border-collapse:separate;border-spacing:0}
+  body.win-capped #accounts .account-cards thead th{position:sticky;top:0;z-index:10;
+    background:var(--panel2);box-shadow:0 2px 0 var(--panel2)!important}
+  body.win-capped #accounts .account-cards thead th:nth-child(-n+3),
+  body.win-capped #accounts .account-cards thead th:last-child{z-index:11}
+}
 /* 看板页的面板用 #pageAnalytics .panel{overflow:hidden}（ID 选择器）做圆角
    裁剪，优先级压过上一条，限高模式下 section 的滚动被裁掉——内容超出限高
    后既看不到也滚不动。这里把滚动权还给限高模式下的看板面板。 */
@@ -467,6 +477,12 @@ body.pricing-off #kpiCostCard{display:none}
    直接成为 .toolbar 的 flex 子项，分组胶囊与组间距都不变。移动端才变成一个可
    折叠的整块（见 ≤640px 规则）。 */
 .tb-advanced{display:contents}
+@media (min-width:641px){
+  #accountToolbar{flex-wrap:nowrap;align-items:center;gap:3px;overflow-x:auto;padding-bottom:4px}
+  #accountToolbar .tb-group{flex-shrink:0;gap:2px;padding:2px}
+  #accountToolbar .tb-bulk-trio{gap:2px}
+  #accountToolbar button{flex-shrink:0;white-space:nowrap;font-size:10px;padding:6px 4px}
+}
 /* 折叠箭头按钮只在移动端出现，桌面端由 display:none 收掉。 */
 .tb-more-toggle{display:none}
 /* 收起时箭头朝下（可展开），展开后朝上（可收起）。 */
@@ -836,6 +852,58 @@ a:hover{text-decoration:underline}
   cursor:pointer;transition:all .15s ease;overflow-wrap:anywhere}
 .page-nav-item:hover{color:var(--fg);background:var(--panel2)}
 .page-nav-item.active{color:var(--fg);background:var(--panel2);border-color:var(--line);font-weight:600}
+.api-access-page{max-width:1320px}
+.api-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.api-page-head h2{margin:0;font-size:19px;color:var(--fg);font-family:var(--serif);font-weight:600;letter-spacing:.02em}
+.api-page-head p{margin:5px 0 0;color:var(--dim);font-size:12px;line-height:1.5}
+.api-page-tabs{display:flex;gap:5px;background:var(--panel2);padding:4px;border:1px solid var(--line);border-radius:10px;margin-bottom:16px;width:max-content;max-width:100%;overflow-x:auto}
+.api-page-tab{appearance:none;border:1px solid transparent;background:transparent;color:var(--dim);padding:7px 15px;border-radius:7px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.api-page-tab:hover{color:var(--fg);background:var(--panel)}
+.api-page-tab.active{background:var(--panel);border-color:var(--line);color:var(--fg);font-weight:600;box-shadow:var(--shadow-sm)}
+.api-pane[hidden]{display:none!important}
+.api-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.api-section-head h3{margin:0;font-size:14px;color:var(--fg);font-weight:650}
+.api-section-head p{margin:4px 0 0;color:var(--dim);font-size:11px;line-height:1.5}
+.api-key-create{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.api-key-create[hidden]{display:none!important}
+.api-key-create label{display:flex;flex-direction:column;gap:5px;color:var(--dim);font-size:11px}
+.api-key-create input[type=text]{min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 9px;color:var(--fg);font:inherit;font-size:12px}
+.api-scope-checks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.api-scope-checks label{display:inline-flex;flex-direction:row;align-items:center;gap:4px;color:var(--fg2);font-size:11px;white-space:nowrap}
+.api-table{width:100%;border-collapse:collapse;font-size:12px}
+.api-table th{padding:8px 9px;text-align:left;color:var(--dim);font-size:10px;font-weight:650;letter-spacing:.04em;border-bottom:1px solid var(--line);white-space:nowrap}
+.api-table td{padding:10px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.api-table tr:last-child td{border-bottom:0}
+.api-table .api-key-name{font-weight:600;color:var(--fg)}
+.api-table .api-key-meta{display:block;color:var(--dim);font-size:10px;margin-top:3px}
+.api-scope-chip{display:inline-block;margin:1px 4px 1px 0;padding:2px 6px;border-radius:999px;color:var(--accent);background:var(--accent-soft);font-size:10px;white-space:nowrap}
+.api-status-dot{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:11px}
+.api-status-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.api-status-dot.off{color:var(--dim)}
+.api-secret-reveal{margin:0 0 14px;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:9px;color:var(--fg);font-size:12px}
+.api-secret-reveal code{display:block;margin-top:6px;padding:7px 9px;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:auto;color:var(--fg);font-size:11px}
+.api-doc-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+.api-doc-list{position:sticky;top:var(--page-nav-top,84px);padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.api-doc-list-title{padding:5px 9px 8px;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.api-doc-item{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--dim);font:inherit;text-align:left;cursor:pointer}
+.api-doc-item:hover{background:var(--panel2);color:var(--fg)}
+.api-doc-item.active{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+.api-doc-method{font-family:monospace;font-size:10px;color:var(--accent);font-weight:700}
+.api-doc-path{font-family:monospace;font-size:11px;word-break:break-all;color:var(--fg2)}
+.api-doc-detail section{margin-bottom:14px}
+.api-doc-detail h3{margin:0 0 8px;font-size:13px;color:var(--fg)}
+.api-doc-contract{padding:10px 12px;border-left:3px solid var(--accent);background:var(--panel2);color:var(--dim);font-size:12px;line-height:1.6}
+.api-doc-pre{margin:0;padding:12px;background:var(--terminal-bg);color:var(--terminal-fg);border-radius:8px;overflow:auto;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+.api-param-table{width:100%;border-collapse:collapse;font-size:11px}
+.api-param-table th,.api-param-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.api-param-table th{color:var(--dim);font-size:10px}
+@media (max-width:760px){
+  .api-doc-layout{grid-template-columns:1fr;gap:12px}
+  .api-doc-list{position:static;display:flex;gap:6px;overflow-x:auto;padding:7px}
+  .api-doc-list-title{display:none}
+  .api-doc-item{min-width:190px}
+  .api-table{min-width:720px}
+}
 /* 回到顶部：排在区块清单上方，所以留出与清单的间距 */
 button.page-nav-top{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
   margin-bottom:8px;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:600;
@@ -2005,12 +2073,13 @@ html:not([data-console-layout="on"]) .header-left .console-nav-caption,
 html:not([data-console-layout="on"]) .header-left .console-nav-link {display:none!important}
 html:not([data-console-layout="on"]) #btnNavGateway {order:1}
 html:not([data-console-layout="on"]) #btnNavAccounts {order:2}
-html:not([data-console-layout="on"]) #btnNavTasks {order:3}
-html:not([data-console-layout="on"]) #btnNavMedia {order:4}
-html:not([data-console-layout="on"]) #btnNavAnalytics {order:5}
+html:not([data-console-layout="on"]) #btnNavApi {order:3}
+html:not([data-console-layout="on"]) #btnNavAnalytics {order:4}
+html:not([data-console-layout="on"]) #btnNavTasks {order:5}
 html:not([data-console-layout="on"]) #btnNavAgents {order:6}
-html:not([data-console-layout="on"]) #btnNavSettings {order:7}
-html:not([data-console-layout="on"]) #btnNavLogs {order:8}
+html:not([data-console-layout="on"]) #btnNavMedia {order:7}
+html:not([data-console-layout="on"]) #btnNavSettings {order:8}
+html:not([data-console-layout="on"]) #btnNavLogs {order:9}
 html[data-console-layout="on"] #classicTitle {display:none}
 /* 内容区筛选条（账号列表 / 请求列表）：默认布局也要能用。console 那两套样式表
    默认 media="not all"，关掉 console 布局后筛选条既没有外观、又会被上面的规则
@@ -2225,7 +2294,7 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
   };
 
   // 3. Tab 初始化（与下方主脚本的 MAIN_TABS 保持一致）
-  var TABS = ['overview','gateway','accounts','tasks','media','analytics','agents','settings','logs'];
+  var TABS = ['overview','gateway','accounts','api','analytics','tasks','agents','media','settings','logs'];
   var fallback = window.__NEXT_UI__ ? 'overview' : 'gateway';
   var pick = null;
   try {
@@ -2257,6 +2326,13 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
   var ATTRS = ['title', 'placeholder', 'aria-label', 'data-label', 'alt'];
   var SKIP = {SCRIPT: 1, STYLE: 1, TEXTAREA: 1, NOSCRIPT: 1};
   var DICT = {
+    '暂无请求记录': 'No requests yet',
+    '今日已更新，累计与历史计算中': 'Today is up to date. Calculating totals and history',
+    '正在后台计算用量': 'Calculating usage in the background',
+    '统计更新于': 'Statistics updated at',
+    '统计更新失败，显示上次结果': 'Update failed. Showing the previous results',
+    '用量统计失败，请刷新重试': 'Usage calculation failed. Refresh to retry',
+    '无法读取用量统计': 'Could not load usage statistics',
     '媒体': 'Media',
     '全部号池': 'All pools',
     '文本号池': 'Text pool',
@@ -2714,6 +2790,7 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     'Buddy 加油站签到、猫猫旅行、连登管家与抽奖、夜猫子任务；各项每日额度互不占用。': 'Buddy refuel check-in, cat travel, streak rewards and lottery, and the night-owl task; each daily quota is independent.',
     '国内任务执行中...': 'Running China tasks...',
     // 页签名与区块标题：词级词典缺了「福利」，整体只能拼出「Taskand福利」。
+    '自动化任务': 'Automation tasks',
     '任务与福利': 'Tasks & rewards',
     '国际版每日活跃福利': 'Daily activity rewards (Global)',
     '已获取福利总积分': 'Total reward credits earned',
@@ -2735,6 +2812,10 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     'CodeArts 接入': 'CodeArts',
     'CodeArts 出口': 'CodeArts exit',
     '出站 TLS 状态': 'Outbound TLS status',
+    '语音合成 TTS': 'Text-to-speech (TTS)',
+    '语音转写 ASR': 'Speech-to-text (ASR)',
+    '语音合成 ': 'TTS ',
+    '语音转写 ': 'ASR ',
     '默认 auto：优先使用随包 Go/uTLS 桥，不可用时自动回退 Python/OpenSSL。这里只显示脱敏状态；桥认证密钥、代理凭据和账号 token 不会返回浏览器。': 'Default auto: prefer the bundled Go/uTLS bridge and fall back to Python/OpenSSL when it is unavailable. Only redacted status is shown here; the bridge secret, proxy credentials and account tokens are never sent to the browser.',
     '请求模式': 'Requested mode',
     '桥状态': 'Bridge state',
@@ -2957,6 +3038,21 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     ' 次，首轮等待 ': ' tries, first wait ',
     '已启用：每': 'On: every',
     '已启用：由网关代跑 web_search / web_fetch': 'On: the gateway runs web_search / web_fetch for the client',
+    '搜索执行方式': 'Search execution',
+    '由模型决定（多轮，原生）': 'Model decides (multi-round, native)',
+    '网关预检索（一次性）': 'Gateway pre-search (single shot)',
+    '网页工具网关': 'Web tool gateway',
+    '启用网页工具网关': 'Enable the web tool gateway',
+    '协议内注入': 'Protocol injection',
+    '搜索后端': 'Search providers',
+    '抓取后端': 'Fetch providers',
+    '元宝账号池': 'Yuanbao account pool',
+    '本地引擎': 'Local engines',
+    '本机 HTTP': 'Local HTTP',
+    '全池随机轮换': 'Rotate the whole pool',
+    '仅国内版': 'China realm only',
+    '仅国际版': 'International realm only',
+    '网页工具网关已保存': 'Web tool gateway saved',
     '已启用：账号单模型当日超过': 'On: once an account, for a single model, exceeds today',
     '已启用：账号当日超过': 'On: once an account exceeds today',
     '已复制': 'Copied',
@@ -3018,7 +3114,7 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '(默认)': '(default)',
     '已开启：账号独立成一个页签': 'On: accounts get their own tab',
     '已关闭：账号与网关回到同一页': 'Off: accounts are back on the gateway page',
-    '关闭（默认）时，账号列表、「当前禁用」与「签到与活跃记录」留在「网关与账号」页，位置与拆分前一致；开启后它们搬到独立的「账号」页，顶部页签变成 网关 → 账号 → 数据看板 → 智能体配置 → 设置 → 运行日志，网关页只剩网关自己的东西——账号多起来（国际版十几个）之后翻起来更短。两侧的区块与行为完全一样，只是分在哪一页；关闭后 ?tab=accounts 的书签会退回「网关与账号」页。': 'Off (the default) keeps the account list, "currently disabled" and the check-in & activity log on the "Gateway & accounts" page, where they were before the split; on moves them to an "Accounts" page of their own and the top tabs become Gateway -> Accounts -> Analytics -> Agents -> Settings -> Logs, leaving the gateway page with only gateway content - shorter to page through once you run a dozen Global accounts. The sections and their behaviour are the same either way, only the page they live on differs; with it off a ?tab=accounts bookmark falls back to the "Gateway & accounts" page.',
+    '关闭（默认）时，账号列表与「当前禁用」留在「网关与账号」页，位置与拆分前一致；开启后它们搬到独立的「账号」页，顶部页签变成 网关 → 账号 → 数据看板 → 智能体配置 → 设置 → 运行日志，网关页只剩网关自己的东西——账号多起来（国际版十几个）之后翻起来更短。两侧的区块与行为完全一样，只是分在哪一页；关闭后 ?tab=accounts 的书签会退回「网关与账号」页。': 'Off (the default) keeps the account list and "currently disabled" on the "Gateway & accounts" page, where they were before the split; on moves them to an "Accounts" page of their own and the top tabs become Gateway -> Accounts -> Analytics -> Agents -> Settings -> Logs, leaving the gateway page with only gateway content - shorter to page through once you run a dozen Global accounts. The sections and their behaviour are the same either way, only the page they live on differs; with it off a ?tab=accounts bookmark falls back to the "Gateway & accounts" page.',
     '面板窗口限高': 'Panel window height cap',
     '每个窗口（区块）超过这个高度时在窗口内部滚动，不再把整页拉长；滚动时标题行固定在窗口顶部。单位像素；填 0 表示不限。': 'Each window scrolls internally once it is taller than this, instead of stretching the page; its title row stays pinned to the top while scrolling. In pixels; 0 means no limit.',
     '窗口最高高度（像素，0 = 不限）': 'Max window height (px, 0 = no limit)',
@@ -3031,12 +3127,19 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '全选': 'Select all',
     '全不选': 'Clear all',
     '反选': 'Invert',
+    '保存勾选': 'Save selection',
+    '保存中...': 'Saving...',
     '把当前清单里的模型全部勾上（与「从未改过勾选」的默认态等价）': 'Tick every model in the current catalog - the same as the default state of never having touched the selection',
     '取消全部勾选：DSH 等读取模型清单的客户端会被拦下，不会写出一份空清单': 'Untick everything: clients that read the model list, such as DSH, are stopped instead of being handed an empty list',
     '按当前勾选状态取反：只想排除个别模型时比逐个点快': 'Flip the current ticks: quicker than clicking one by one when you only want to exclude a few models',
     '勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单，网关本身照常提供这些模型。': 'The selection is stored in the gateway settings and applies to every realm view; unticking only affects the model list written by the one-click configuration - the gateway still serves those models.',
+    '勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单。': 'The selection is stored in the gateway settings and applies to every realm view; unticking only affects the model list written by one-click setup.',
+    '勾选后点击保存，再重新一键配置并重启客户端。未保存过的国际版清单会根据账号档位默认选择 Pro Only 模型。': 'Tick models and click Save selection, then re-run one-click setup and restart the client. Unsaved international catalogs auto-tick Pro Only models only when an enabled international Pro account is present.',
     '勾选后该模型才会写入 DSH 等客户端的一键配置': 'The model is written into the one-click configuration for DSH and other clients only when ticked',
     ' · 已选 ': ' · selected ',
+    '模型勾选已保存': 'Model selection saved',
+    '模型勾选已是最新': 'Model selection is up to date',
+    '读取另一出口模型失败，未保存：': 'Failed to read other exit models, not saved: ',
     '模型勾选保存失败：': 'Saving the model selection failed: ',
     '请先在「网关模型清单」勾选至少一个模型': 'Tick at least one model in the Gateway model catalog first',
     '当前生效': 'In effect',
@@ -3104,6 +3207,52 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '新增': 'Added',
     '新增的行还没有填写 Key': 'The new row has no key yet',
     '新密码': 'New password',
+    'API 接入': 'API access',
+    '接口': 'API',
+    '接口文档': 'API docs',
+    '调用记录': 'Call records',
+    '管理对外 API Key、查看调用记录，并按接口获取可直接复制的请求示例。': 'Manage external API keys, review call records, and copy request examples for each endpoint.',
+    'API 接入模块': 'API access module',
+    'Key 只控制接口权限；国内版 / 国际版由每次请求的 realm 参数决定。': 'Keys only control endpoint permissions; the China or Global version is selected by the realm parameter on each request.',
+    '管理外部 API Key、调用记录和账号接口文档。': 'Manage external API keys, call records, and account API documentation.',
+    '生成 Key': 'Generate key',
+    '正在读取外部 API Key…': 'Reading external API keys…',
+    '正在读取调用记录…': 'Reading call records…',
+    '记录外部 API 的请求时间、接口、调用方和结果；密钥值不会写入记录，超量时自动保留最近 5000 条。': 'External API request time, endpoint, caller and result are recorded; secret values are never written to the log, and only the latest 5,000 records are retained.',
+    '接口列表': 'Endpoints',
+    '账号授权': 'Account authorization',
+    '读取账号': 'Read accounts',
+    '密钥': 'Key',
+    '权限': 'Permissions',
+    '参数': 'Parameter',
+    '类型': 'Type',
+    '必填': 'Required',
+    '是': 'Yes',
+    '调用方': 'Caller',
+    '需要 account:auth': 'Requires account:auth',
+    '需要 account:read': 'Requires account:read',
+    'cn / intl；决定本次授权使用的版本。': 'cn or intl; selects the account version for this authorization.',
+    '创建授权请求时返回的请求标识。': 'Request identifier returned when the authorization request was created.',
+    'cn / intl；筛选账号版本。': 'cn or intl; filters the account version.',
+    '创建账号授权请求': 'Create an account authorization request',
+    '查询账号授权状态': 'Query authorization status',
+    '读取账号列表': 'Read the account list',
+    '传入 cn 或 intl。服务端生成一次性授权链接；浏览器完成登录后，用返回的 request_id 查询结果。': 'Pass cn or intl. The server creates a one-time authorization link; after browser sign-in, use the returned request_id to query the result.',
+    '浏览器登录完成前返回 pending；成功后返回脱敏账号资料。终态会短暂保留，重复查询仍可读取。': 'The response is pending until browser sign-in finishes; success returns redacted account details. The terminal state is retained briefly and can be queried again.',
+    'realm 是必填查询参数，只能取 cn 或 intl。返回指定版本的账号脱敏信息，不返回任何 token 或代理凭据。': 'realm is required and must be cn or intl. The response contains redacted accounts for that version and never returns tokens or proxy credentials.',
+    '接口约定': 'Contract',
+    '请求参数': 'Parameters',
+    '完整 cURL 示例': 'Full cURL example',
+    '请求实例': 'Request example',
+    '响应示例': 'Response example',
+    '还没有外部 API Key，点击右上角「+ 新建 API Key」创建。': 'No external API keys yet. Click “+ New API key” in the upper right to create one.',
+    '新 Key 只在这里完整显示一次，请立即复制保存。': 'The new key is shown in full only once. Copy and save it now.',
+    '复制 Key': 'Copy key',
+    '至少选择一个权限': 'Select at least one permission',
+    '外部 API Key 已创建': 'External API key created',
+    '暂无外部 API 调用记录': 'No external API call records yet',
+    '删除后这个 Key 将立即失效，历史调用记录仍会保留。确定删除吗？': 'Deleting this key takes effect immediately; historical call records are kept. Delete it?',
+    'Key 已复制': 'Key copied',
     '新建 API Key': 'New API key',
     '旅行中...': 'Travelling...',
     '旅行归来！待领奖': 'Back home! Reward pending',
@@ -3565,7 +3714,7 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '编辑': 'Edit',
     '编辑 API Key': 'Edit API key',
     '管理代理出口与网关模型，查看当日调用量、估算花费、成功率与最近请求。': 'Manage proxy exits and the gateway model list; review call volume, estimated cost, success rate and recent requests.',
-    '管理账号池：添加/导入/导出、启用停用、凭证与积分刷新、代理出口绑定，以及签到与每日活跃记录。': 'Manage the account pool: add/import/export, enable/disable, credential and credit refresh, exit binding, plus check-in and daily activity records.',
+    '管理账号池：添加/导入/导出、启用停用、凭证与积分刷新与代理出口绑定。': 'Manage the account pool: add/import/export, enable/disable, credential and credit refresh, and exit binding.',
     '网关实时目录里新增的模型，上游新上架的名字无需改代码就会进入下一轮取价；两次取价之间就被调用的新模型，第一笔请求即按内存里的目录': 'models newly added to the live catalog of the gateway; names upstream has just listed enter the next price fetch with no code change, and a new model called between two fetches is',
     '网关平均生成速度': 'Gateway average generation speed',
     '网关日志已清空': 'Gateway logs cleared',
@@ -3590,7 +3739,7 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '网页通道打卡 (国际版)': 'Web-channel check-in (Global)',
     '网页通道打卡:': 'Web-channel check-in:',
     '网页通道打卡失败:': 'Web-channel check-in failed:',
-    '耗时': 'Time',
+    '耗时': 'Duration',
     '能力': 'Capabilities',
     '能量': 'energy',
     '自': 'from',
@@ -3915,6 +4064,15 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     '猫猫正在旅行途中，请稍后再来查看！': 'The cat is still travelling; check again later!'
   };
   var HANT_PHRASES = {
+    "暂无请求记录": "暫無請求記錄",
+    "语音合成 TTS": "語音合成 TTS",
+    "语音转写 ASR": "語音轉寫 ASR",
+    "今日已更新，累计与历史计算中": "今日已更新，累計與歷史計算中",
+    "正在后台计算用量": "正在背景計算用量",
+    "统计更新于": "統計更新於",
+    "统计更新失败，显示上次结果": "統計更新失敗，顯示上次結果",
+    "用量统计失败，请刷新重试": "用量統計失敗，請重新整理後重試",
+    "无法读取用量统计": "無法讀取用量統計",
     "每日任务": "每日任務",
     "优先 DeepSeek Flash，失败切免费模型": "優先 DeepSeek Flash，失敗切免費模型",
     "已启用 · 先 Flash 后免费": "已啟用 · 先 Flash 後免費",
@@ -4261,6 +4419,21 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     "已启用：每": "已啟用：每",
     "已启用：每 ": "已啟用：每 ",
     "已启用：由网关代跑 web_search / web_fetch": "已啟用：由閘道代跑 web_search / web_fetch",
+    "搜索执行方式": "搜尋執行方式",
+    "由模型决定（多轮，原生）": "由模型決定（多輪，原生）",
+    "网关预检索（一次性）": "閘道預先搜尋（一次性）",
+    "网页工具网关": "網頁工具閘道",
+    "启用网页工具网关": "啟用網頁工具閘道",
+    "协议内注入": "協定內注入",
+    "搜索后端": "搜尋後端",
+    "抓取后端": "抓取後端",
+    "元宝账号池": "元寶帳號池",
+    "本地引擎": "本機引擎",
+    "本机 HTTP": "本機 HTTP",
+    "全池随机轮换": "全池隨機輪換",
+    "仅国内版": "僅國內版",
+    "仅国际版": "僅國際版",
+    "网页工具网关已保存": "網頁工具閘道已保存",
     "已启用：账号单模型当日超过": "已啟用：帳號單模型當日超過",
     "已启用：账号当日超过": "已啟用：帳號當日超過",
     "已复制": "已複製",
@@ -4365,7 +4538,6 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     "每个账号固定绑定一个出口代理槽。槽位地址变化时绑定账号自动跟随；禁用或删除后回退直连。": "每個帳號固定繫結一個出口代理槽。槽位地址變化時繫結帳號自動跟隨；禁用或刪除後回退直連。",
     "每日签到 (国内版)": "每日簽到 (國內版)",
     "Buddy 加油站签到": "Buddy 加油站簽到",
-    "本期 Buddy 加油站活动": "本期 Buddy 加油站活動",
     "当前连续登录天数": "目前連續登入天數",
     "WorkBuddy 成长计划": "WorkBuddy 成長計劃",
     "每日签到:": "每日簽到:",
@@ -4440,12 +4612,19 @@ if(!window.__NEXT_UI__ && defaultConsoleLayout) {
     "全选": "全選",
     "全不选": "全不選",
     "反选": "反選",
+    "保存勾选": "儲存勾選",
+    "保存中...": "儲存中...",
     "把当前清单里的模型全部勾上（与「从未改过勾选」的默认态等价）": "把當前清單裡的模型全部勾上（與「從未改過勾選」的預設態等價）",
     "取消全部勾选：DSH 等读取模型清单的客户端会被拦下，不会写出一份空清单": "取消全部勾選：DSH 等讀取模型清單的客戶端會被攔下，不會寫出一份空清單",
     "按当前勾选状态取反：只想排除个别模型时比逐个点快": "按當前勾選狀態取反：只想排除個別模型時比逐個點快",
     "勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单，网关本身照常提供这些模型。": "勾選結果存在閘道設定裡，對所有版本檢視生效；未勾選只影響一鍵配置寫入客戶端的模型清單，閘道本身照常提供這些模型。",
+    "勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单。": "勾選結果存在閘道設定裡，對所有版本檢視生效；未勾選只影響一鍵配置寫入客戶端的模型清單。",
+    "勾选后点击保存，再重新一键配置并重启客户端。未保存过的国际版清单会根据账号档位默认选择 Pro Only 模型。": "勾選後點擊儲存，再重新一鍵配置並重啟客戶端。未儲存過的國際版清單會根據帳號檔位預設勾選 Pro Only 模型。",
     "勾选后该模型才会写入 DSH 等客户端的一键配置": "勾選後該模型才會寫入 DSH 等客戶端的一鍵配置",
     " · 已选 ": " · 已選 ",
+    "模型勾选已保存": "模型勾選已儲存",
+    "模型勾选已是最新": "模型勾選已是最新",
+    "读取另一出口模型失败，未保存：": "讀取另一出口模型失敗，未儲存：",
     "模型勾选保存失败：": "模型勾選儲存失敗：",
     "请先在「网关模型清单」勾选至少一个模型": "請先在「閘道模型清單」勾選至少一個模型",
     "网络异常:": "網路異常:",
@@ -5486,6 +5665,24 @@ html[data-ui="next"] .table-wrap{border:1px solid var(--line);border-radius:12px
 html[data-ui="next"] .table-wrap table{border:0}
 html[data-ui="next"] .mono{font-variant-numeric:tabular-nums}
 
+/* 限高时让列表自身滚动，筛选、操作和分页留在表格外。 */
+body.win-capped .main-page :is(#recentRequestsSection,#gatewayModelsSection,#workbuddyActivitySection,#workbuddyDisabledSection,#codeartsAccountsSection,#sectionDailyTasks,#sectionGrowthTasks,#mediaModelsSection,#mediaTasksSection){max-height:none;overflow:visible}
+body.win-capped .main-page #sectionDailyTasks{padding-top:18px}
+body.win-capped .main-page #sectionDailyTasks>:first-child{position:static;background:transparent;padding-top:0;padding-bottom:0;margin-bottom:14px!important}
+@media (max-width:860px){body.win-capped .main-page #sectionDailyTasks{padding-top:14px}}
+body.win-capped :is(#recent,#gatewayModelsSection .next-table-scroll,#activityList,#disabledList .table-wrap,#codeartsAccounts .table-wrap,#growthTableScroll,#mediaModelsList,#mediaTasksList){
+  max-height:max(180px, calc(var(--win-max-h) - 180px));overflow:auto
+}
+@media (min-width:641px){
+  body.win-capped :is(#recent,#gatewayModelsSection .next-table-scroll,#activityList,#disabledList .table-wrap,#codeartsAccounts .table-wrap,#growthTableScroll,#mediaModelsList,#mediaTasksList) table,
+  :is(#remainingUsageTableIntl,#remainingUsageTableCn,#creditHistoryTable,#creditGrantsTable){border-collapse:separate;border-spacing:0}
+  body.win-capped :is(#recent,#gatewayModelsSection .next-table-scroll,#activityList,#disabledList .table-wrap,#codeartsAccounts .table-wrap,#growthTableScroll,#mediaModelsList,#mediaTasksList) thead th,
+  :is(#remainingUsageTableIntl,#remainingUsageTableCn,#creditHistoryTable,#creditGrantsTable) thead th{
+    position:sticky;top:0;z-index:10;background:var(--panel2)!important;
+    box-shadow:0 2px 0 var(--panel2)!important
+  }
+}
+
 /* 按钮与表单 */
 html[data-ui="next"] main button.sec,
 html[data-ui="next"] main .btn,
@@ -5695,7 +5892,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <span class="console-wordmark">WorkBuddy<span>API HUB</span></span>
     </div>
     <div class="console-service"><span id="consoleStatusSlot"></span><span>本地网关</span><span class="console-port" id="consolePort">8788</span></div>
-    <a class="gh-link" href="https://github.com/ardeyouxipianyi/workbuddy2api-hub" target="_blank" rel="noopener noreferrer"
+    <a class="gh-link" href="https://github.com/niyouqianma/workbuddy2api-hub" target="_blank" rel="noopener noreferrer"
        title="查看 WorkBuddy 项目仓库" aria-label="WorkBuddy 项目仓库">
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
@@ -5786,7 +5983,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
               border-radius:14px;padding:26px 24px;box-shadow:0 10px 30px rgba(15,23,42,.12)">
     <div style="font-size:16px;font-weight:700;margin-bottom:6px">WorkBuddy</div>
     <div style="font-size:12px;color:var(--dim);margin-bottom:18px">请输入面板访问密码</div>
-    <input id="panelPwdInput" type="password" placeholder="面板密码" autocomplete="current-password"
+    <input id="panelPwdInput" type="password" placeholder="面板密码" autocomplete="current-password" disabled
            onkeydown="if(event.key==='Enter') submitPanelLogin()"
            style="width:100%;background:var(--panel2);border:1px solid var(--line);
                   border-radius:8px;padding:9px 12px;color:var(--fg);font:inherit">
@@ -5825,13 +6022,17 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.5c2.7.2 4.3 1.8 4.8 4.5"/></svg>
         <span>账号</span>
       </button>
+      <button type="button" class="next-nav-item" data-next-tab="api" onclick="nextGo('api')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h8M8 12h8M8 17h5"/><rect x="4" y="3" width="16" height="18" rx="2.5"/></svg>
+        <span>接口</span>
+      </button>
       <button type="button" class="next-nav-item" data-next-tab="analytics" onclick="nextGo('analytics')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5M4 19h16"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
         <span>用量</span>
       </button>
       <button type="button" class="next-nav-item" data-next-tab="tasks" onclick="nextGo('tasks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>
-        <span>自动化</span>
+        <span>自动化任务</span>
       </button>
       <button type="button" class="next-nav-item" data-next-tab="agents" onclick="nextGo('agents')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M9 7V5.5A2.5 2.5 0 0 1 11.5 3h1A2.5 2.5 0 0 1 15 5.5V7M9 12h.01M15 12h.01M9.5 15.5h5"/></svg>
@@ -5851,7 +6052,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       </button>
     </nav>
     <div class="next-sidebar-foot">
-      <a class="next-side-link" href="https://github.com/ardeyouxipianyi/workbuddy2api-hub" target="_blank" rel="noopener noreferrer">
+      <a class="next-side-link" href="https://github.com/niyouqianma/workbuddy2api-hub" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         WorkBuddy 仓库
       </a>
@@ -5900,26 +6101,29 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <button class="main-nav-btn" id="btnNavAccounts" onclick="switchMainTab('accounts')">
         账号
       </button>
+      <button class="main-nav-btn" id="btnNavApi" onclick="switchMainTab('api')">
+        接口
+      </button>
       <button type="button" class="console-nav-link" id="btnNavModels" onclick="openModelCatalog()">模型管理</button>
       <button class="main-nav-btn" id="btnNavTasks" onclick="switchMainTab('tasks')">
-        任务与福利
+        自动化任务
       </button>
     </div>
     <div class="console-nav-group">
       <div class="console-nav-caption">监控与统计</div>
       <button class="main-nav-btn" id="btnNavMedia" onclick="switchMainTab('media')">媒体</button>
       <button class="main-nav-btn" id="btnNavAnalytics" onclick="switchMainTab('analytics')">
-        数据看板
+        用量
       </button>
       <button type="button" class="console-nav-link" id="btnNavRequests" onclick="openRecentRequests()">请求记录</button>
       <button class="main-nav-btn" id="btnNavLogs" onclick="switchMainTab('logs')">
-        运行日志
+        日志
       </button>
     </div>
     <div class="console-nav-group">
       <div class="console-nav-caption">配置中心</div>
       <button class="main-nav-btn" id="btnNavAgents" onclick="switchMainTab('agents')">
-        智能体配置
+        智能体
       </button>
       <button class="main-nav-btn" id="btnNavSettings" onclick="switchMainTab('settings')">
         设置
@@ -6151,7 +6355,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
   <!-- 版本模型库与能力清单 -->
   <section id="gatewayModelsSection">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <h2 style="margin:0">网关模型清单<em id="modelsRealmTag" style="color:var(--dim);font-weight:500"></em><em id="availModelCount"></em><span id="modelPickActions" class="page-nav-exclude" style="font-weight:400;margin-left:10px;white-space:nowrap"><button class="sec mini" onclick="applyModelPickAction('all')" title="把当前清单里的模型全部勾上（与「从未改过勾选」的默认态等价）">全选</button><button class="sec mini" onclick="applyModelPickAction('none')" title="取消全部勾选：DSH 等读取模型清单的客户端会被拦下，不会写出一份空清单">全不选</button><button class="sec mini" onclick="applyModelPickAction('invert')" title="按当前勾选状态取反：只想排除个别模型时比逐个点快">反选</button></span></h2>
+      <h2 style="margin:0">网关模型清单<em id="modelsRealmTag" style="color:var(--dim);font-weight:500"></em><em id="availModelCount"></em><span id="modelPickActions" class="page-nav-exclude" style="font-weight:400;margin-left:10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap"><button class="sec mini" onclick="applyModelPickAction('all')">全选</button><button class="sec mini" onclick="applyModelPickAction('none')">全不选</button><button class="sec mini" onclick="applyModelPickAction('invert')">反选</button><button class="sec mini" id="btnSaveModelSelection" onclick="saveModelSelection()">保存勾选</button><span id="modelSelectionStatus" style="font-size:11px;font-weight:500;color:var(--warn)"></span></span></h2>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div style="font-size:12px;color:var(--dim)">展示当前视图下官方对话大模型、上下文容量、推理/视觉能力、思考控制、默认采样参数及在售倍率</div>
         <!-- 手动刷新：强制走一次上游 /v3/config（只在当前视图的版本上，用该
@@ -6169,7 +6373,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <button type="button" class="sec mini" onclick="clearModelCatalogFilter()">清除筛选</button>
     </div>
     <div id="modelPickHint" style="font-size:12px;color:var(--dim);margin:0 0 10px;line-height:1.6"
-         title="勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单，网关本身照常提供这些模型。">只有勾选的模型才会写入 DSH 等客户端（一键配置）；默认全部勾选，可用表头「全选 / 全不选 / 反选」批量调整，改完请重新一键配置并重启客户端。</div>
+         title="勾选结果存在网关设置里，对所有版本视图生效；未勾选只影响一键配置写入客户端的模型清单。">勾选后点击保存，再重新一键配置并重启客户端。未保存过的国际版清单会根据账号档位默认选择 Pro Only 模型。</div>
     <!-- 清单来源横幅：API 获取 → 绿色状态条（附刷新时间）；非 API（项目默认
          信息/缓存文件）→ 黄色警示「模型、倍率数据可能不一致」。内容由
          /v1/models 的 catalog 字段驱动，见 renderModelsSourceLine。 -->
@@ -6202,7 +6406,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
   <div id="accountsHeader" style="margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <div>
       <h2 style="margin:0;font-size:17px;color:var(--fg);font-family:var(--serif);font-weight:600;letter-spacing:.02em">账号</h2>
-      <div style="font-size:12px;color:var(--dim);margin-top:4px">管理账号池：添加/导入/导出、启用停用、凭证与积分刷新、代理出口绑定，以及签到与每日活跃记录。</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:4px">管理账号池：添加/导入/导出、启用停用、凭证与积分刷新与代理出口绑定。</div>
     </div>
     <!-- 版本视图切换：账号列表、「当前禁用」与签到记录都按当前视图区域取，所以
          这一页自己得有个入口，不必为了换版本跑回网关页。它切的是视图
@@ -6215,7 +6419,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <button type="button" id="accountsRealmCodearts" onclick="switchViewRealm('codearts')" aria-pressed="false" style="display:none">CodeArts</button>
     </div>
   </div>
-  <!-- 拆分模式下三个区块的落点（页头之后、原顺序）；合并模式搬走之后这里就空着 -->
+  <!-- 拆分模式下账号区块的落点（页头之后、原顺序）；合并模式搬走之后这里就空着 -->
   <span id="accountsHomeAnchor" hidden></span>
   <!-- CodeArts 视图：账号池由本进程直接管理。 -->
   <section id="codeartsAccountsSection" style="display:none">
@@ -6259,9 +6463,8 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       </select>
       <span class="console-filter-count" id="accountFilterCount">全部账号</span>
       <button type="button" class="sec mini" onclick="clearAccountFilters()">清除筛选</button>
-      <span style="font-size:11px;color:var(--dim)">选择错误码会自动勾选全部命中账号；选中分组后，刷新、测试、补积分和启停仍只作用于该分组</span>
     </div>
-    <div class="toolbar">
+    <div class="toolbar" id="accountToolbar">
     <button onclick="openLoginModal()">添加</button>
     <!-- 静态 API Key 是另一条并行入口：CodeBuddy 的登录页不支持企业微信扫码，
          企业号只能在 API 管理页手工建 Key 再粘进来。 -->
@@ -6297,8 +6500,8 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
             aria-controls="acctAdvancedTools" onclick="toggleAcctAdvanced(this)"
             title="展开 / 收起批量操作"><span class="tb-more-chev" aria-hidden="true"></span></button>
     </div>
-    <!-- 号池筛选放在折叠区之外：手机上也要能直接看到、直接切。 -->
-    <div class="tb-group tb-pool" id="poolToolsGroup">
+    <!-- 开启号池隔离后显示号池筛选和移动操作。 -->
+    <div class="tb-group tb-pool" id="poolToolsGroup" hidden>
     <select id="poolFilterSelect" class="mini-select pool-filter-select" onchange="poolFilter(this.value)" title="按号池筛选账号" aria-label="按号池筛选账号">
       <option value="all">全部号池</option>
       <option value="text">文本号池</option>
@@ -6341,51 +6544,13 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
     </div>
     <div id="disabledList"></div>
   </section>
-
-  <!-- 签到与活跃记录：读 wb_activity.py 落下的结构化历史（GET /activity/history），
-       一行一次真实尝试。筛选全部由服务端做（range/task/result/uid/limit），前端
-       只拼查询串与渲染，免得两处各写一份筛选规则再慢慢跑偏。 -->
-  <section id="workbuddyActivitySection">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-      <h2 style="margin:0">签到与活跃记录 <em id="activityCount"></em></h2>
-      <div style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <select id="activityRange" class="slot-select" onchange="loadActivityBoard()" aria-label="时间区间">
-          <option value="today">今日</option>
-          <option value="1d">近 1 天</option>
-          <option value="7d" selected>近 7 天</option>
-          <option value="30d">近 30 天</option>
-          <option value="90d">近 90 天</option>
-          <option value="all">全部</option>
-        </select>
-        <select id="activityTask" class="slot-select" onchange="loadActivityBoard()" aria-label="任务">
-          <option value="">全部任务</option>
-          <option value="checkin">国内版签到</option>
-          <option value="daily_chat">国际版每日活跃</option>
-        </select>
-        <select id="activityResult" class="slot-select" onchange="loadActivityBoard()" aria-label="结果">
-          <option value="">全部结果</option>
-          <option value="ok">成功</option>
-          <option value="failed">失败</option>
-        </select>
-        <select id="activityAccount" class="slot-select" onchange="loadActivityBoard()" aria-label="账号">
-          <option value="">全部账号</option>
-        </select>
-        <button class="sec mini" id="btnActivityRefresh" onclick="loadActivityBoard(true)">刷新</button>
-      </div>
-    </div>
-    <div id="activityList" class="table-wrap"></div>
-    <div id="activityMore" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span id="activityMoreInfo"></span>
-      <button class="sec mini" id="btnActivityMore" onclick="loadActivityBoard(false, true)">加载更多</button>
-    </div>
-  </section>
   </div><!-- /pageAccounts -->
   
   <div id="pageTasks" class="main-page">
   <!-- 页面头部：标题 + 一行说明，与其它页面的头部结构保持一致 -->
   <div style="margin-bottom:16px">
     <h2 style="margin:0;font-size:17px;color:var(--fg);font-family:var(--serif);font-weight:600;letter-spacing:.02em">任务与福利</h2>
-    <div style="font-size:12px;color:var(--dim);margin-top:4px">每日活跃打卡、Buddy 加油站、成长任务与福利积分总览。</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:4px">每日活跃打卡、Buddy 加油站、成长任务与签到活跃记录。</div>
   </div>
   <!-- 每日任务：国际版签到与国内版每日福利放在同一块，但每个动作仍有独立
        入口；一键执行每日任务只是把它们串起来，不改变单项语义。 -->
@@ -6396,23 +6561,11 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
         <div style="font-size:12px;color:var(--dim)">国际版每日签到与国内版每日福利；按天刷新，可单项执行，也可一键跑完。</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:nowrap;align-items:center;flex:0 0 auto;justify-content:flex-end">
-        <!-- 账号选择器：原生 <select> 的弹层宽度跟输入框走，长标签会被直接截断，
-             这里换成自绘面板，四列对齐（账号 / 剩余积分 / 任务 / 今日签到）。 -->
-        <div class="acct-picker" id="cnCheckinAcctPicker">
-          <button type="button" class="acct-trigger" id="cnCheckinAcctTrigger" onclick="toggleGrowthPicker('daily', event)" aria-haspopup="listbox" aria-expanded="false">
-            <span class="acct-trigger-label" id="cnCheckinAcctCurrent">全部国内账号 (批量)</span>
-            <span class="acct-caret">▾</span>
-          </button>
-          <div class="acct-menu" id="cnCheckinAcctMenu" role="listbox" aria-label="选择国内版账号（每日福利）">
-            <div class="acct-menu-head"><span>账号</span><span>剩余积分</span><span>任务</span><span>今日签到</span></div>
-            <div id="cnCheckinAcctList"></div>
-          </div>
-        </div>
         <button class="primary" id="btnRunAllDailyTasks" onclick="runAllDailyTasks(this)">一键执行每日任务</button>
       </div>
     </div>
 
-    <div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--panel2)">
+    <div style="border-top:1px solid var(--line);padding-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
         <div>
           <h3 style="margin:0;font-size:14px">国际版每日签到</h3>
@@ -6424,7 +6577,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
           <button class="primary" id="btnPageDailyChatPending" onclick="doDailyChatPending(this)">未活跃打卡一键打卡</button>
         </div>
       </div>
-      <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:var(--panel)">
+      <div style="background:var(--panel2);border-radius:10px;padding:10px 12px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
           <input id="taskDailyChatPreferFlash" type="checkbox" checked onchange="saveDailyChatPreferFlash(this)" style="width:16px;height:16px">
           <strong style="font-size:13px">优先 DeepSeek Flash，失败切免费模型</strong>
@@ -6444,29 +6597,41 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
           <div class="v" id="intlTotalGranted" style="color:var(--warn)">-</div>
         </div>
       </div>
-      <div id="intlDailyChatPanel" style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.8;background:var(--panel)">
+      <div id="intlDailyChatPanel" style="background:var(--panel2);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.8">
         <div id="intlDailyChatSlots" style="color:var(--dim)">今日时段：-</div>
         <div id="intlDailyChatLive" style="color:var(--dim)"></div>
         <div id="intlDailyChatPending" style="margin-top:6px"></div>
       </div>
     </div>
 
-    <div style="border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)">
+    <div style="border-top:1px solid var(--line);padding-top:16px;margin-top:18px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
         <div>
           <h3 style="margin:0;font-size:14px">国内版每日福利</h3>
           <div style="font-size:12px;color:var(--dim);margin-top:3px">Buddy 加油站签到、猫猫旅行、连登管家与抽奖、夜猫子任务；各项每日额度互不占用。</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">
+          <!-- 账号选择器：原生 <select> 的弹层宽度跟输入框走，长标签会被直接截断，
+               这里换成自绘面板，四列对齐（账号 / 剩余积分 / 任务 / 今日签到）。 -->
+          <div class="acct-picker" id="cnCheckinAcctPicker">
+            <button type="button" class="acct-trigger" id="cnCheckinAcctTrigger" onclick="toggleGrowthPicker('daily', event)" aria-haspopup="listbox" aria-expanded="false">
+              <span class="acct-trigger-label" id="cnCheckinAcctCurrent">全部国内账号 (批量)</span>
+              <span class="acct-caret">▾</span>
+            </button>
+            <div class="acct-menu" id="cnCheckinAcctMenu" role="listbox" aria-label="选择国内版账号（每日福利）">
+              <div class="acct-menu-head"><span>账号</span><span>剩余积分</span><span>任务</span><span>今日签到</span></div>
+              <div id="cnCheckinAcctList"></div>
+            </div>
+          </div>
           <button class="primary" id="btnPageCheckin" onclick="triggerBuddyCheckin(this)">一键国内版签到</button>
           <button id="btnCatTravel" onclick="triggerCatTravel(this)">猫猫旅行</button>
           <button id="btnRunStreakBonus" onclick="triggerStreakBonus(this)">连登管家与抽奖</button>
           <button id="btnRunNightTask" onclick="triggerNightTask(this)">夜猫子任务</button>
         </div>
       </div>
-      <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(185px,1fr))">
+      <div class="cards" style="margin-bottom:0;grid-template-columns:repeat(auto-fit,minmax(185px,1fr))">
         <div class="card accent2" title="Buddy 加油站每日签到活动">
-          <div class="k">本期 Buddy 加油站活动</div>
+          <div class="k">Buddy 加油站签到</div>
           <div class="v" id="cnTodayCheckinState" style="font-size:17px;letter-spacing:-.2px">-</div>
         </div>
         <div class="card accent">
@@ -6524,7 +6689,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       </div>
     </div>
 
-    <div style="overflow-x:auto">
+    <div id="growthTableScroll" style="overflow-x:auto">
       <table id="growthTable" class="data-cards">
         <thead>
           <tr>
@@ -6541,19 +6706,56 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
 
     <div id="taskLogBox" style="display:none;margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12px;font-family:ui-monospace,monospace;line-height:1.6;max-height:220px;overflow-y:auto"></div>
   </section>
+
+  <!-- 签到与活跃记录：读 wb_activity.py 落下的结构化历史（GET /activity/history），
+       一行一次真实尝试。筛选全部由服务端做（range/task/result/uid/limit），前端
+       只拼查询串与渲染，免得两处各写一份筛选规则再慢慢跑偏。 -->
+  <section id="workbuddyActivitySection">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <h2 style="margin:0">签到与活跃记录 <em id="activityCount"></em></h2>
+      <div style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="activityRange" class="slot-select" onchange="loadActivityBoard()" aria-label="时间区间">
+          <option value="today">今日</option>
+          <option value="1d">近 1 天</option>
+          <option value="7d" selected>近 7 天</option>
+          <option value="30d">近 30 天</option>
+          <option value="90d">近 90 天</option>
+          <option value="all">全部</option>
+        </select>
+        <select id="activityTask" class="slot-select" onchange="loadActivityBoard()" aria-label="任务">
+          <option value="">全部任务</option>
+          <option value="checkin">国内版签到</option>
+          <option value="daily_chat">国际版每日活跃</option>
+        </select>
+        <select id="activityResult" class="slot-select" onchange="loadActivityBoard()" aria-label="结果">
+          <option value="">全部结果</option>
+          <option value="ok">成功</option>
+          <option value="failed">失败</option>
+        </select>
+        <select id="activityAccount" class="slot-select" onchange="loadActivityBoard()" aria-label="账号">
+          <option value="">全部账号</option>
+        </select>
+        <button class="sec mini" id="btnActivityRefresh" onclick="loadActivityBoard(true)">刷新</button>
+      </div>
+    </div>
+    <div id="activityList" class="table-wrap"></div>
+    <div id="activityMore" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span id="activityMoreInfo"></span>
+      <button class="sec mini" id="btnActivityMore" onclick="loadActivityBoard(false, true)">加载更多</button>
+    </div>
+  </section>
   </div><!-- /pageTasks -->
 
   
   <!-- 账号页（issue #176）：账号多起来之后，网关页的卡片与最近请求被一长串账号
-       挤到下面，所以账号列表与「当前禁用总览」单独成一个菜单，签到/活跃记录也
-       放在这里——它回答的正是「这个账号昨天到底签成了没有」。 -->
+       挤到下面，所以账号列表与「当前禁用总览」单独成一个菜单。 -->
   <div id="pageMedia" class="main-page">
     <div style="margin-bottom:16px">
       <h2 style="margin:0;font-size:17px;color:var(--fg);font-family:var(--serif);font-weight:600;letter-spacing:.02em">媒体生成</h2>
       <div style="font-size:12px;color:var(--dim);margin-top:4px">生图 / 生视频的限额在「设置」页；这里看模型约束和最近任务。每次生成都会真实扣账号积分。</div>
     </div>
 
-    <section>
+    <section id="mediaModelsSection">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div>
           <h2 style="margin:0">可用媒体模型 <em id="mediaModelsState"></em></h2>
@@ -6564,7 +6766,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <div id="mediaModelsList" class="table-wrap"></div>
     </section>
 
-    <section>
+    <section id="mediaTasksSection">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div>
           <h2 style="margin:0">最近任务 <em id="mediaTasksState"></em></h2>
@@ -6599,11 +6801,18 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
           <div style="font-size:12px;color:var(--dim);margin-bottom:4px">每 Key 每日积分上限</div>
           <input id="setMediaDailyCredits" type="number" min="0" max="100000" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--fg);font:inherit">
         </div>
+        <label style="min-width:150px;height:38px;margin-top:20px;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg)">
+          <input id="setTtsEnabled" type="checkbox"> 语音合成 TTS
+        </label>
+        <label style="min-width:150px;height:38px;margin-top:20px;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg)">
+          <input id="setAsrEnabled" type="checkbox"> 语音转写 ASR
+        </label>
         <button onclick="saveMediaConfig(this)" style="height:38px;margin-top:20px">保存</button>
       </div>
       <div style="font-size:12px;color:var(--dim);margin-top:10px">
         每 Key 每日积分上限填 0 表示不限。视频时长会与模型目录里的上限取小值。
         生视频并发超过上限时新任务<b>先排队</b>（不提交上游、不扣积分），并行任务会尽量分到不同账号上。
+        语音合成 <code>/v1/audio/speech</code> 与语音转写 <code>/v1/audio/transcriptions</code> 默认关闭；开启后使用文本号池账号，并计入当前账号的积分消耗。
       </div>
     </section>
   </div>
@@ -6620,7 +6829,14 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
       <button data-range="month">本月</button>
       <button data-range="d30">近 30 天</button>
       <button data-range="all">全部</button>
+      <button data-range="custom">自定义</button>
     </div>
+    <div id="rangeCustomBox" hidden>
+      <label>开始 <input id="rangeCustomSince" type="datetime-local"></label>
+      <label>结束 <input id="rangeCustomUntil" type="datetime-local"></label>
+    </div>
+    <button id="usageBoardRefresh" type="button" class="sec mini">刷新用量</button>
+    <span id="usageBoardStatus" class="pagesub" role="status"></span>
   </div>
 
   <!-- ====================== ① KPI（B 版：大卡 + 大面积 sparkline + 环形卡） ====================== -->
@@ -6952,7 +7168,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
         <div>
           <h2 style="margin:0">账号独立成一个页签 <em id="setAccountsSeparateState"></em></h2>
           <div style="font-size:12px;color:var(--dim);margin-top:4px">
-            关闭（默认）时，账号列表、「当前禁用」与「签到与活跃记录」留在「网关与账号」页，位置与拆分前一致；开启后它们搬到独立的「账号」页，顶部页签变成 网关 → 账号 → 数据看板 → 智能体配置 → 设置 → 运行日志，网关页只剩网关自己的东西——账号多起来（国际版十几个）之后翻起来更短。两侧的区块与行为完全一样，只是分在哪一页；关闭后 ?tab=accounts 的书签会退回「网关与账号」页。
+            关闭（默认）时，账号列表与「当前禁用」留在「网关与账号」页，位置与拆分前一致；开启后它们搬到独立的「账号」页，顶部页签变成 网关 → 账号 → 数据看板 → 智能体配置 → 设置 → 运行日志，网关页只剩网关自己的东西——账号多起来（国际版十几个）之后翻起来更短。两侧的区块与行为完全一样，只是分在哪一页；关闭后 ?tab=accounts 的书签会退回「网关与账号」页。
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
@@ -7465,7 +7681,7 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px">
             <label style="font-size:13px;color:var(--dim)">面板密码
-              <input id="setIdentityVersionPassword" type="password" autocomplete="current-password" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;color:var(--fg)">
+              <input id="setIdentityVersionPassword" type="password" autocomplete="off" disabled style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;color:var(--fg)">
             </label>
             <button onclick="saveIdentityVersions(this)">保存版本号</button>
             <span style="font-size:12px;color:var(--warn)">保存后立即生效；输入框留空表示恢复默认</span>
@@ -7700,6 +7916,87 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
               由网关代跑
             </label>
             <button onclick="saveLocalWebTools(this)">保存</button>
+          </div>
+        </div>
+      </section>
+
+      <section data-cat="models">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 style="margin:0">网页工具网关 <em id="setWebGatewayState"></em></h2>
+            <div style="font-size:12px;color:var(--dim);margin-top:4px">
+              三个能力端点：搜索、抓取、搜索+抓取；同时把搜索与抓取作为模型暴露（wb-search / wb-fetch / wb-search-fetch）。
+              搜索后端可在「WorkBuddy 元宝」与「本地引擎」之间多选，抓取后端同理；元宝走账号池，可指定全池轮换或只用一个区域。
+              默认关闭，关闭时行为与之前完全一致。
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+          <label style="display:flex;align-items:center;gap:8px">
+            <input id="setWebGateway" type="checkbox" style="width:16px;height:16px" onchange="saveWebGateway()">
+            启用网页工具网关
+          </label>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <span style="color:var(--dim)">协议内注入</span>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setInjectAnthropic" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              Anthropic Messages
+            </label>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setInjectResponses" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              OpenAI Responses
+            </label>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setInjectGemini" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              Gemini
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="color:var(--dim)">搜索执行方式</span>
+            <select id="setWebSearchMode" onchange="saveWebGateway()" style="min-width:220px">
+              <option value="multi">由模型决定（多轮，原生）</option>
+              <option value="pre">网关预检索（一次性）</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <span style="color:var(--dim)">搜索后端</span>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setSearchWorkbuddy" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              WorkBuddy 元宝
+            </label>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setSearchLocal" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              本地引擎
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <span style="color:var(--dim)">抓取后端</span>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setFetchWorkbuddy" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              WorkBuddy
+            </label>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input id="setFetchLocal" type="checkbox" style="width:15px;height:15px" onchange="saveWebGateway()">
+              本机 HTTP
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="color:var(--dim)">元宝账号池</span>
+            <select id="setWorkbuddyRealm" onchange="saveWebGateway()" style="min-width:180px">
+              <option value="all">全池随机轮换</option>
+              <option value="cn">仅国内版</option>
+              <option value="intl">仅国际版</option>
+            </select>
+            <span style="color:var(--dim);font-size:12px">国内版 copilot.tencent.com · 国际版 www.workbuddy.ai</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="color:var(--dim)">指定账号</span>
+              <a href="#" onclick="toggleAllWebAccounts(true);return false" style="font-size:12px">全选</a>
+              <a href="#" onclick="toggleAllWebAccounts(false);return false" style="font-size:12px">全不选</a>
+              <span style="color:var(--dim);font-size:12px">全部勾选 = 不限（走整个池）</span>
+            </div>
+            <div id="wbAccountList" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;color:var(--dim)">加载账号…</div>
           </div>
         </div>
       </section>
@@ -8098,6 +8395,74 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
   </div>
 
 
+  <div id="pageApi" class="main-page api-access-page">
+    <div class="api-page-head">
+      <div>
+        <h2>API 接入</h2>
+        <p>管理对外 API Key、查看调用记录，并按接口获取可直接复制的请求示例。</p>
+      </div>
+    </div>
+    <div class="api-page-tabs" role="tablist" aria-label="API 接入模块">
+      <button type="button" class="api-page-tab active" id="apiKeyTab" role="tab" aria-selected="true" onclick="selectExternalApiPanel('keys', this)">API Key</button>
+      <button type="button" class="api-page-tab" id="apiDocsTab" role="tab" aria-selected="false" onclick="selectExternalApiPanel('docs', this)">接口文档</button>
+    </div>
+
+    <div id="apiPaneKeys" class="api-pane">
+      <section>
+        <div class="api-section-head">
+          <div>
+            <h3>API Key</h3>
+            <p>Key 只控制接口权限；国内版 / 国际版由每次请求的 realm 参数决定。</p>
+          </div>
+          <button type="button" onclick="toggleExternalApiKeyForm()">+ 新建 API Key</button>
+        </div>
+        <div id="externalApiKeyForm" class="api-key-create" hidden>
+          <label>名称
+            <input id="externalApiKeyName" type="text" placeholder="例如：自动化服务" maxlength="64">
+          </label>
+          <div class="api-scope-checks">
+            <label><input id="externalScopeAuth" type="checkbox" checked> account:auth</label>
+            <label><input id="externalScopeRead" type="checkbox" checked> account:read</label>
+          </div>
+          <button type="button" onclick="createExternalApiKey(this)">生成 Key</button>
+          <button type="button" class="sec" onclick="toggleExternalApiKeyForm(false)">取消</button>
+        </div>
+        <div id="externalApiSecretReveal" class="api-secret-reveal" hidden></div>
+        <div id="externalApiKeys"><div class="empty">正在读取外部 API Key…</div></div>
+      </section>
+
+      <section>
+        <div class="api-section-head">
+          <div>
+            <h3>调用记录</h3>
+            <p>记录外部 API 的请求时间、接口、调用方和结果；密钥值不会写入记录，超量时自动保留最近 5000 条。</p>
+          </div>
+          <button type="button" class="sec mini" onclick="loadExternalApiRecords()">刷新</button>
+        </div>
+        <div id="externalApiRecords"><div class="empty">正在读取调用记录…</div></div>
+      </section>
+    </div>
+
+    <div id="apiPaneDocs" class="api-pane" hidden>
+      <div class="api-doc-layout">
+        <aside class="api-doc-list" id="apiDocList">
+          <div class="api-doc-list-title">接口列表</div>
+          <button type="button" class="api-doc-item active" data-doc="authorize" onclick="selectExternalApiDoc('authorize', this)">
+            <span class="api-doc-method">POST</span><span class="api-doc-path">/v1/accounts/authorize</span>
+          </button>
+          <button type="button" class="api-doc-item" data-doc="authorize-status" onclick="selectExternalApiDoc('authorize-status', this)">
+            <span class="api-doc-method">GET</span><span class="api-doc-path">/v1/accounts/authorize/{request_id}</span>
+          </button>
+          <button type="button" class="api-doc-item" data-doc="accounts" onclick="selectExternalApiDoc('accounts', this)">
+            <span class="api-doc-method">GET</span><span class="api-doc-path">/v1/accounts?realm=intl</span>
+          </button>
+        </aside>
+        <section class="api-doc-detail" id="apiDocDetail"></section>
+      </div>
+    </div>
+  </div>
+
+
   <div id="pageAgents" class="main-page">
     <div style="margin-bottom:16px">
       <h2 style="margin:0;font-size:17px;color:var(--fg);font-family:var(--serif);font-weight:600;letter-spacing:.02em">智能体配置</h2>
@@ -8256,9 +8621,13 @@ html[data-ui="next"] #nextContent .console-shell > main {padding:24px;max-width:
     <div class="next-more-handle"></div>
     <div class="next-more-title">更多</div>
     <div class="next-more-grid">
+      <button type="button" class="next-more-item" data-next-tab="api" onclick="nextGo('api')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h8M8 12h8M8 17h5"/><rect x="4" y="3" width="16" height="18" rx="2.5"/></svg>
+        <span>接口</span>
+      </button>
       <button type="button" class="next-more-item" data-next-tab="tasks" onclick="nextGo('tasks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>
-        <span>自动化</span>
+        <span>自动化任务</span>
       </button>
       <button type="button" class="next-more-item" data-next-tab="agents" onclick="nextGo('agents')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M9 7V5.5A2.5 2.5 0 0 1 11.5 3h1A2.5 2.5 0 0 1 15 5.5V7M9 12h.01M15 12h.01M9.5 15.5h5"/></svg>
@@ -8961,8 +9330,7 @@ function updateUI(){
   }
 
   // CodeArts 视图隐藏 WorkBuddy 专属区块，避免把两套账号/积分读混。
-  ["workbuddyAccountsSection", "workbuddyDisabledSection",
-   "workbuddyActivitySection"].forEach(function(id){
+  ["workbuddyAccountsSection", "workbuddyDisabledSection"].forEach(function(id){
     const el = document.getElementById(id);
     if(el) el.style.display = isCodeartsView ? "none" : "";
   });
@@ -9513,7 +9881,10 @@ async function refreshModelCatalog(btn){
 async function loadModels(){
   try{
     const r = await getJSON('/v1/models?realm=' + encodeURIComponent(window.VIEW_REALM));
-    MODELS_DATA = r.data || [];
+    const list = r.data || [];
+    window.MODELS_DATA = list;
+    if(typeof globalThis !== 'undefined') globalThis.MODELS_DATA = list;
+    mergeUnseenModelsForCurrentRealm();
     renderModelsSourceLine(r.catalog || null);
     renderAvailableModels();
   }catch(e){
@@ -9535,10 +9906,12 @@ let MODEL_SELECTION_CONFIGURED = false;
 // 上一次确认写进服务端的那份选择：失败回滚与「没变化就不重发」都靠它。
 // null = 还没保存过（与空集合语义不同）。
 let MODEL_SELECTION_SAVED = null;
-let MODEL_SELECTION_TIMER = null;
 let MODEL_SELECTION_SAVING = false;
-let MODEL_SELECTION_QUEUED = false;
 let MODEL_SELECTION_LOADING = false;
+let MODEL_SELECTION_DIRTY = false;
+let MODEL_SELECTION_REV = 0;
+let MODEL_SELECTION_MERGED_REALMS = new Set();
+let MODEL_SELECTION_SEEN_IDS = new Set();
 
 function modelSelectionKey(list){
   return (list || []).map(String).sort().join('\n');
@@ -9546,14 +9919,68 @@ function modelSelectionKey(list){
 function currentModelSelection(){
   return Array.from(AGENT_MODEL_SELECTION);
 }
+function catalogModelsData(){
+  if(typeof MODELS_DATA !== 'undefined' && Array.isArray(MODELS_DATA)) return MODELS_DATA;
+  return Array.isArray(window.MODELS_DATA) ? window.MODELS_DATA : [];
+}
+function accountIsPaid(a){
+  if(!a || a.enabled === false) return false;
+  if(a.tier && a.tier.paid !== undefined && a.tier.paid !== null) return a.tier.paid === true;
+  return !!(a.credits && a.credits.is_paid_user === true);
+}
 // 某个模型当前算不算被勾选。所有「读勾选」的地方都走这里，别直接看集合，
 // 否则「从未保存」的全选态会被读成「全都不要」。
+function defaultModelPicked(id, realm, models){
+  const r = realm || window.VIEW_REALM;
+  if(r !== 'intl') return true;
+  const model = (models || catalogModelsData()).find(m => m && m.id === id);
+  if(!model || !model.entitlement) return true;
+  return (window.ACCOUNTS || []).some(a => a.realm === 'intl' && accountIsPaid(a));
+}
 function isModelPicked(id){
-  return !MODEL_SELECTION_CONFIGURED || AGENT_MODEL_SELECTION.has(id);
+  return MODEL_SELECTION_CONFIGURED ? AGENT_MODEL_SELECTION.has(id) : defaultModelPicked(id);
+}
+function isSavedModelPicked(id){
+  return MODEL_SELECTION_SAVED ? MODEL_SELECTION_SAVED.has(id) : defaultModelPicked(id, agentRequestRealm(), AGENT_MODELS);
+}
+function updateModelSelectionStatus(){
+  const status = document.getElementById('modelSelectionStatus');
+  if(status) status.textContent = MODEL_SELECTION_DIRTY ? '未保存' : '';
+  const btn = document.getElementById('btnSaveModelSelection');
+  if(btn && btn.classList && btn.classList.toggle){
+    btn.classList.toggle('primary', MODEL_SELECTION_DIRTY);
+    btn.classList.toggle('sec', !MODEL_SELECTION_DIRTY);
+  }
+}
+function materializeModelSelection(){
+  if(MODEL_SELECTION_CONFIGURED) return;
+  const ids = allModelPickIds();
+  AGENT_MODEL_SELECTION = new Set(ids.filter(isModelPicked));
+  MODEL_SELECTION_CONFIGURED = true;
+  ids.forEach(id => MODEL_SELECTION_SEEN_IDS.add(id));
+  if(window.VIEW_REALM === 'intl' || window.VIEW_REALM === 'cn'){
+    MODEL_SELECTION_MERGED_REALMS.add(window.VIEW_REALM);
+  }
+}
+function mergeUnseenModelsForCurrentRealm(){
+  if(!MODEL_SELECTION_CONFIGURED || MODEL_SELECTION_SAVED) return;
+  const r = window.VIEW_REALM;
+  if(r !== 'intl' && r !== 'cn') return;
+  if(MODEL_SELECTION_MERGED_REALMS.has(r)) return;
+  allModelPickIds().forEach(id => {
+    if(!MODEL_SELECTION_SEEN_IDS.has(id)){
+      MODEL_SELECTION_SEEN_IDS.add(id);
+      if(defaultModelPicked(id, r, catalogModelsData())) AGENT_MODEL_SELECTION.add(id);
+    }
+  });
+  MODEL_SELECTION_MERGED_REALMS.add(r);
 }
 // 批量动作始终针对当前目录全量 id，不受纯展示筛选隐藏的行影响。
 function allModelPickIds(){
-  return (MODELS_DATA || []).map(m => String((m && m.id) || '')).filter(Boolean);
+  const list = (typeof MODELS_DATA !== 'undefined' && Array.isArray(MODELS_DATA))
+    ? MODELS_DATA
+    : catalogModelsData();
+  return list.map(m => String((m && m.id) || '')).filter(Boolean);
 }
 let MODEL_CATALOG_FILTER = '';
 function clearModelCatalogFilter(){
@@ -9568,8 +9995,8 @@ function clearModelCatalogFilter(){
 function updateAvailModelCount(){
   const em = document.getElementById('availModelCount');
   if(!em) return;
-  const total = MODELS_DATA.length;
-  const picked = MODEL_SELECTION_CONFIGURED ? AGENT_MODEL_SELECTION.size : total;
+  const total = catalogModelsData().length;
+  const picked = allModelPickIds().filter(isModelPicked).length;
   em.textContent = '(共 ' + total + ' 个) · 已选 ' + picked;
 }
 
@@ -9583,16 +10010,21 @@ function syncModelPickBoxes(){
 }
 
 async function loadAgentModelSelection(){
-  if(MODEL_SELECTION_LOADING) return;
+  if(MODEL_SELECTION_LOADING || MODEL_SELECTION_DIRTY || MODEL_SELECTION_SAVING) return;
   MODEL_SELECTION_LOADING = true;
+  const startRev = MODEL_SELECTION_REV;
   try{
     const r = await getJSON('/agents/model-selection');
+    if(MODEL_SELECTION_DIRTY || MODEL_SELECTION_REV !== startRev || MODEL_SELECTION_SAVING) return;
     const list = (r && (r.selected_models || r.models)) || [];
     // configured=false 表示服务端还没存过：这时维持「全部勾选」的默认态，
     // 空集合在这里读作「全都要」。存过之后才按存的那份画。
     MODEL_SELECTION_CONFIGURED = !!(r && r.configured);
     AGENT_MODEL_SELECTION = new Set(MODEL_SELECTION_CONFIGURED ? list.map(String) : []);
     MODEL_SELECTION_SAVED = MODEL_SELECTION_CONFIGURED ? new Set(AGENT_MODEL_SELECTION) : null;
+    MODEL_SELECTION_MERGED_REALMS = new Set();
+    MODEL_SELECTION_SEEN_IDS = new Set();
+    updateModelSelectionStatus();
     syncModelPickBoxes();
   }catch(e){
     // 读不到就维持「全部勾选」的默认态（等价于升级前的行为：整份目录都写进客户端），
@@ -9603,58 +10035,76 @@ async function loadAgentModelSelection(){
   }
 }
 
-// 勾选落库：本地立即生效，POST 防抖 400ms——连点几行只发一次整份列表。
-// 选择没变化（比如勾上又取消）时不发请求。
-function scheduleModelSelectionSave(){
-  if(MODEL_SELECTION_TIMER) clearTimeout(MODEL_SELECTION_TIMER);
-  MODEL_SELECTION_TIMER = setTimeout(saveModelSelection, 400);
-}
-
+// 显式保存勾选：点击「保存勾选」后把当前选中的模型清单写入服务端；首次从未保存状态
+// 落盘时，顺带把另一出口的默认勾选（不含未解锁的国际版 Pro Only 模型）一起合并进去。
 async function saveModelSelection(){
-  MODEL_SELECTION_TIMER = null;
-  if(MODEL_SELECTION_SAVING){ MODEL_SELECTION_QUEUED = true; return; }
-  const payload = currentModelSelection();
-  const key = modelSelectionKey(payload);
-  // 还没存过时（SAVED=null）不能拿空集合当"上次保存的结果"比，否则用户从全选态
-  // 里取消一个模型，会被误判成"没变化"而永远发不出去。
-  if(MODEL_SELECTION_SAVED && key === modelSelectionKey(Array.from(MODEL_SELECTION_SAVED))) return;
+  if(MODEL_SELECTION_SAVING) return;
   MODEL_SELECTION_SAVING = true;
+  const btn = document.getElementById('btnSaveModelSelection');
+  if(btn){ btn.disabled = true; btn.textContent = '保存中...'; }
+  const startRev = MODEL_SELECTION_REV;
   try{
-    const r = await postJSON('/agents/model-selection', {models: payload});
-    MODEL_SELECTION_SAVED = new Set(payload);
-    MODEL_SELECTION_CONFIGURED = true;
-    // 服务端会清洗列表（去重 / 超长截断）。保存期间没人继续勾选时以返回值为准，
-    // 让面板上的勾选与真正落盘的清单一致；有人在期间改过就保留本地状态，等
-    // 下面 finally 里的补发把最新一份送上去。
-    const saved = r && (r.selected_models || r.models);
-    if(Array.isArray(saved) && modelSelectionKey(currentModelSelection()) === key){
-      const normalized = new Set(saved.map(String));
-      if(modelSelectionKey(Array.from(normalized)) !== key){
-        AGENT_MODEL_SELECTION = normalized;
-        MODEL_SELECTION_SAVED = new Set(normalized);
-        syncModelPickBoxes();
-        if(AGENT_MODELS.length) renderAgentConnForm();
+    const ids = allModelPickIds();
+    const draft = MODEL_SELECTION_CONFIGURED
+      ? new Set(AGENT_MODEL_SELECTION)
+      : new Set(ids.filter(isModelPicked));
+    const seen = new Set(MODEL_SELECTION_SEEN_IDS);
+    const merged = new Set(MODEL_SELECTION_MERGED_REALMS);
+    ids.forEach(id => seen.add(id));
+    if(window.VIEW_REALM === 'intl' || window.VIEW_REALM === 'cn'){
+      merged.add(window.VIEW_REALM);
+    }
+    if(!MODEL_SELECTION_SAVED){
+      for(const realm of ['intl', 'cn']){
+        if(merged.has(realm)) continue;
+        let catalog;
+        try{
+          catalog = await getJSON('/v1/models?realm=' + realm);
+        }catch(e){
+          if(!isAuthError(e)) toast('读取另一出口模型失败，未保存：' + e.message, 'bad');
+          return;
+        }
+        (catalog && catalog.data ? catalog.data : []).forEach(model => {
+          if(model && model.id && !seen.has(model.id)){
+            seen.add(model.id);
+            if(defaultModelPicked(model.id, realm, catalog.data)) draft.add(model.id);
+          }
+        });
+        merged.add(realm);
       }
     }
+    const payload = Array.from(draft);
+    const key = modelSelectionKey(payload);
+    // 还没存过时（SAVED=null）不能拿空集合当"上次保存的结果"比，否则用户从全选态
+    // 里取消一个模型，会被误判成"没变化"而永远发不出去。
+    if(MODEL_SELECTION_SAVED && key === modelSelectionKey(Array.from(MODEL_SELECTION_SAVED))){
+      if(MODEL_SELECTION_REV === startRev) MODEL_SELECTION_DIRTY = false;
+      updateModelSelectionStatus();
+      toast('模型勾选已是最新', 'ok');
+      return;
+    }
+    const r = await postJSON('/agents/model-selection', {models: payload});
+    const saved = r && (r.selected_models || r.models);
+    const committed = Array.isArray(saved) ? saved.map(String) : payload;
+    MODEL_SELECTION_SAVED = new Set(committed);
+    MODEL_SELECTION_CONFIGURED = true;
+    MODEL_SELECTION_MERGED_REALMS = merged;
+    MODEL_SELECTION_SEEN_IDS = seen;
+    if(MODEL_SELECTION_REV === startRev){
+      AGENT_MODEL_SELECTION = new Set(committed);
+      MODEL_SELECTION_DIRTY = false;
+      syncModelPickBoxes();
+    } else {
+      MODEL_SELECTION_DIRTY = modelSelectionKey(currentModelSelection()) !== modelSelectionKey(committed);
+    }
+    updateModelSelectionStatus();
+    if(typeof AGENT_MODELS !== 'undefined' && AGENT_MODELS.length && typeof renderAgentConnForm === 'function') renderAgentConnForm();
+    toast('模型勾选已保存', 'ok');
   }catch(e){
-    // 面板上的勾选必须和服务器保持一致：回滚到上次成功的快照并重画。智能体页
-    // 的默认模型下拉是按勾选集合画的，回滚后也要跟着重画，否则它会继续列一个
-    // 已经被取消勾选的模型。
-    AGENT_MODEL_SELECTION = MODEL_SELECTION_SAVED ? new Set(MODEL_SELECTION_SAVED) : new Set();
-    MODEL_SELECTION_CONFIGURED = !!MODEL_SELECTION_SAVED;
-    syncModelPickBoxes();
-    if(AGENT_MODELS.length) renderAgentConnForm();
     if(!isAuthError(e)) toast('模型勾选保存失败：' + e.message, 'bad');
   }finally{
     MODEL_SELECTION_SAVING = false;
-    // 保存期间又有勾选：串行补发一次，别让旧响应把新的选择盖掉。
-    if(MODEL_SELECTION_QUEUED){
-      MODEL_SELECTION_QUEUED = false;
-      scheduleModelSelectionSave();
-    } else if(modelSelectionKey(currentModelSelection())
-              !== modelSelectionKey(MODEL_SELECTION_SAVED ? Array.from(MODEL_SELECTION_SAVED) : [])){
-      scheduleModelSelectionSave();
-    }
+    if(btn){ btn.disabled = false; btn.textContent = '保存勾选'; }
   }
 }
 
@@ -9665,19 +10115,14 @@ document.addEventListener('change', function(ev){
   if(!box || !box.classList || !box.classList.contains('model-pick')) return;
   const id = box.dataset ? box.dataset.modelId : '';
   if(!id) return;
-  if(!MODEL_SELECTION_CONFIGURED){
-    // 从「从未保存」的全选态改起：先把整份清单落成显式集合，再应用这一次改动。
-    // 少了这一步，「取消一个模型」会被存成「只选这一个」的反面。
-    AGENT_MODEL_SELECTION = new Set(allModelPickIds());
-    MODEL_SELECTION_CONFIGURED = true;
-  }
+  materializeModelSelection();
   if(box.checked) AGENT_MODEL_SELECTION.add(id);
   else AGENT_MODEL_SELECTION.delete(id);
+  MODEL_SELECTION_REV++;
   updateAvailModelCount();
-  scheduleModelSelectionSave();
-  // 智能体页的默认模型下拉只列已勾选的模型，选择变了就跟着重画；目录还没
-  // 加载（没打开过智能体页）时由 loadAgents() 自己按当前选择画。
-  if(AGENT_MODELS.length) renderAgentConnForm();
+  MODEL_SELECTION_DIRTY = !MODEL_SELECTION_SAVED
+    || modelSelectionKey(currentModelSelection()) !== modelSelectionKey(Array.from(MODEL_SELECTION_SAVED));
+  updateModelSelectionStatus();
 });
 
 // 「对外名称」列同样走事件委托：表格每次重画都换掉整批 input。
@@ -9695,14 +10140,19 @@ document.addEventListener('change', function(ev){
 // 「实际保存的清单」分家——两者都是最难查的那类双状态 bug。
 function applyModelPickAction(kind){
   const all = allModelPickIds();
-  if(kind === 'all') AGENT_MODEL_SELECTION = new Set(all);
-  else if(kind === 'none') AGENT_MODEL_SELECTION = new Set();
-  else if(kind === 'invert') AGENT_MODEL_SELECTION = new Set(all.filter(id => !isModelPicked(id)));
-  else return;
-  MODEL_SELECTION_CONFIGURED = true;
+  if(!['all', 'none', 'invert'].includes(kind)) return;
+  materializeModelSelection();
+  const next = new Set(AGENT_MODEL_SELECTION);
+  all.forEach(id => {
+    const picked = kind === 'all' || (kind === 'invert' && !isModelPicked(id));
+    if(picked) next.add(id); else next.delete(id);
+  });
+  AGENT_MODEL_SELECTION = next;
+  MODEL_SELECTION_REV++;
   syncModelPickBoxes();
-  scheduleModelSelectionSave();
-  if(AGENT_MODELS.length) renderAgentConnForm();
+  MODEL_SELECTION_DIRTY = !MODEL_SELECTION_SAVED
+    || modelSelectionKey(currentModelSelection()) !== modelSelectionKey(Array.from(MODEL_SELECTION_SAVED));
+  updateModelSelectionStatus();
 }
 
 // 清单来源横幅：把「通过 API 获取的最新数据」和「项目默认/缓存文件数据」在
@@ -9857,15 +10307,16 @@ function renderAvailableModels(){
   if(aliasTh) aliasTh.style.display = aliasOn ? '' : 'none';
   updateAvailModelCount();
   const query = MODEL_CATALOG_FILTER.trim().toLowerCase();
-  const visibleModels = MODELS_DATA.filter(m => !query || [
+  const modelsList = catalogModelsData();
+  const visibleModels = modelsList.filter(m => !query || [
     m.id, m.name, m.description, m.credits,
     m.supports_vision ? '视觉 vision' : '文本 text',
     m.supports_tool_calls ? '工具 tools' : '',
     m.supports_reasoning ? '推理 reasoning' : ''
   ].some(v => String(v || '').toLowerCase().includes(query)));
   const count = document.getElementById('modelCatalogFilterCount');
-  if(count) count.textContent = query ? ('显示 ' + visibleModels.length + ' / ' + MODELS_DATA.length + ' 个模型') : '';
-  if(!MODELS_DATA.length){
+  if(count) count.textContent = query ? ('显示 ' + visibleModels.length + ' / ' + modelsList.length + ' 个模型') : '';
+  if(!modelsList.length){
     tb.innerHTML = '<tr><td colspan="' + (aliasOn ? 9 : 8) + '" class="empty">暂无可用模型</td></tr>';
     return;
   }
@@ -10678,6 +11129,15 @@ async function triggerCatTravel(btn, uidOverride){
   }
 }
 
+/* 切在自动化页执行完单次签到/打卡后，顺手刷新下方签到与活跃记录（若未展开加载更多）。 */
+function refreshActivityBoardOnTasks(){
+  if(typeof currentMainTab !== 'undefined' && currentMainTab === 'tasks'
+     && typeof ACTIVITY_LIMIT !== 'undefined' && typeof ACTIVITY_PAGE !== 'undefined'
+     && ACTIVITY_LIMIT === ACTIVITY_PAGE && typeof loadActivityBoard === 'function'){
+    loadActivityBoard();
+  }
+}
+
 /* 签到回执的展示文案。后端 state：checked = 本次真签成；already = 今天早就签过
  * 了，上游原话是「今天已签到，请明天再来」——这时候一个积分都没加，绝不能再说
  * 「签到成功 (+100积分)」，否则重复点击看起来像是"还能再签一次"。
@@ -10721,6 +11181,7 @@ async function triggerBuddyCheckin(btn, uidOverride){
             fresh ? "ok" : (ok ? "info" : "warn"));
     }
     await loadAccounts(); await loadGrowthTasks();
+    refreshActivityBoardOnTasks();
     return ok;
   }catch(e){
     toast("签到失败: " + e.message, "bad");
@@ -10875,6 +11336,7 @@ async function doDailyChat(btn){
       toast("每日活跃: " + summary, ok ? "ok" : "warn");
     }
     await refreshActiveRealm(); window.updateUI(); loadAccounts(); loadModels();
+    refreshActivityBoardOnTasks();
     return ok;
   }catch(e){ toast("打卡失败: " + e.message, "bad"); return false; }
   finally { btn.disabled = false; btn.textContent = ot; }
@@ -10917,6 +11379,7 @@ async function doDailyChatPending(btn){
       toast("未活跃打卡: " + summary, ok ? "ok" : "warn");
     }
     await refreshActiveRealm(); window.updateUI(); loadAccounts(); loadModels();
+    refreshActivityBoardOnTasks();
     return ok;
   }catch(e){ toast("未活跃打卡失败: " + e.message, "bad"); return false; }
   finally { if(btn){ btn.disabled = false; btn.textContent = ot; } }
@@ -10936,6 +11399,7 @@ async function doDailyChatWeb(btn){
       toast("网页通道打卡: " + summary, res.some(x => x.ok) ? "ok" : "warn");
     }
     await refreshActiveRealm(); window.updateUI(); loadAccounts(); loadModels();
+    refreshActivityBoardOnTasks();
   }catch(e){ toast("网页通道打卡失败: " + e.message, "bad"); }
   finally { btn.disabled = false; btn.textContent = ot; }
 }
@@ -13243,6 +13707,8 @@ async function loadAccounts(poll, opts){
     ]);
     if(!(opts && opts.deferActivity)) await activityPromise;
     window.ACCOUNTS = acct.accounts || [];
+    if(!MODEL_SELECTION_CONFIGURED && !MODEL_SELECTION_DIRTY) syncModelPickBoxes();
+    if(!MODEL_SELECTION_SAVED && typeof AGENT_MODELS !== 'undefined' && AGENT_MODELS.length && typeof renderAgentConnForm === 'function') renderAgentConnForm();
     USAGE_BY_ACCOUNT = {};
     (byAcct.accounts || []).forEach(a => { USAGE_BY_ACCOUNT[a.account] = a; });
     await loadProxySlots();
@@ -13304,11 +13770,10 @@ function poolFilter(scope){
   ACCT_PAGE = 1;
   renderAccounts();
 }
-function applyPoolSeparationUi(){
-  // 号池筛选与「移入媒体池 / 移入文本池」始终可用：poolScope 是账号的归属
-  // 标记，隔离关着时它不限制派发，但仍然是可查、可改的。隔离开关只影响派发
-  // 行为（由服务端判定），不决定这些控件是否上屏——这里只把下拉的显示值与
-  // 当前筛选同步一次。
+function applyPoolSeparationUi(enabled){
+  const group = document.getElementById('poolToolsGroup');
+  if(group) group.hidden = !enabled;
+  if(!enabled && POOL_FILTER !== 'all') poolFilter('all');
   const sel = document.getElementById('poolFilterSelect');
   if(sel) sel.value = POOL_FILTER;
   updateBatchPoolBar();
@@ -15131,19 +15596,39 @@ function renderConsoleInsights(rows, accts){
 /* ------------------------------- dashboard ------------------------------ */
 let REFRESH_RUNNING = false;
 let REFRESH_QUEUED = false;
+let REFRESH_QUEUED_POLL = true;
 let REFRESH_GEN = 0;
-async function refresh(){
+const RECENT_SNAPSHOTS = new Map();
+async function recentSnapshot(url, hold){
+  const cached = RECENT_SNAPSHOTS.get(url);
+  if(hold && cached) return cached;
+  const data = await getJSON(url + '&watch=1' + (cached && cached.revision
+    ? '&rev=' + encodeURIComponent(cached.revision) : ''));
+  if(data.unchanged && cached) return cached;
+  RECENT_SNAPSHOTS.delete(url);
+  RECENT_SNAPSHOTS.set(url, data);
+  if(RECENT_SNAPSHOTS.size > 12) RECENT_SNAPSHOTS.delete(RECENT_SNAPSHOTS.keys().next().value);
+  return data;
+}
+async function refresh(polled = false){
   // 5 秒轮询。撞上正在飞的那一轮时**排队补跑**，而不是直接丢掉：早先的实现是
   // `if(REFRESH_BUSY) return;`，切区域/切账号那一下如果正好撞上轮询在飞，这次
   // 刷新就没了下文，只能干等下一个 5 秒周期——"点了要过几秒才变"就是这么来的。
   REFRESH_GEN++;
-  if(REFRESH_RUNNING){ REFRESH_QUEUED = true; return; }
+  if(REFRESH_RUNNING){
+    REFRESH_QUEUED_POLL = (!REFRESH_QUEUED || REFRESH_QUEUED_POLL) && polled === true;
+    REFRESH_QUEUED = true;
+    return;
+  }
   REFRESH_RUNNING = true;
   const gen = REFRESH_GEN;
-  try { await refreshInner(gen); }
+  try { await refreshInner(gen, polled === true); }
   finally {
     REFRESH_RUNNING = false;
-    if(REFRESH_QUEUED){ REFRESH_QUEUED = false; refresh(); }
+    if(REFRESH_QUEUED){
+      REFRESH_QUEUED = false;
+      refresh(REFRESH_QUEUED_POLL);
+    }
   }
 }
 // 展示货币切换后，把带费用的视图就地重画：各接口有服务端 TTL 缓存，
@@ -15151,18 +15636,16 @@ async function refresh(){
 function refreshAllCostViews(){
   refresh();
   if(currentMainTab === 'analytics'){
+    if(window.wbaRenderCost) window.wbaRenderCost();
     loadAnalytics();
-    loadAnalyticsMatrix();
   }
 }
-async function refreshInner(gen){
+async function refreshInner(gen, polled){
   let usage, recent, perf;
   try{
     [usage, recent, perf] = await Promise.all([
       getJSON('/usage?realm=' + encodeURIComponent(window.VIEW_REALM), POLL_READ),
-      // /usage/recent 不在这里改成可校验：它没有服务端缓存，每次新请求都进榜，
-      // 响应体每轮都在变，服务端也就没有稳定的校验符可发——照旧整份重取。
-      getJSON(recentUrl()),
+      recentSnapshot(recentUrl(), polled && RECENT_PAGE > 1),
       getJSON('/usage/perf?realm=' + encodeURIComponent(window.VIEW_REALM), POLL_READ),
     ]);
     // 取数期间又发起了更新的一轮（例如刚切了区域），这批结果已经过期，
@@ -15599,7 +16082,7 @@ function generatePageList(current, total){
 
 // Tab ids in nav order. One list so the restore path and the nav cannot
 // drift apart.
-const MAIN_TABS = ['overview', 'gateway', 'accounts', 'tasks', 'media', 'analytics', 'agents', 'settings', 'logs'];
+const MAIN_TABS = ['overview', 'gateway', 'accounts', 'api', 'analytics', 'tasks', 'agents', 'media', 'settings', 'logs'];
 const MAIN_TAB_STORE = 'wb-proxy-main-tab';
 let currentMainTab = 'gateway';
 let analyticsRange = 'today';
@@ -15658,7 +16141,10 @@ function panelNeedsLogin(){
   if(gate) gate.style.display = 'flex';
   panelSyncRemember();
   const input = document.getElementById('panelPwdInput');
-  if(input){ input.focus(); }
+  if(input){
+    input.disabled = false;
+    input.focus();
+  }
 }
 
 function panelSessionLost(){
@@ -15692,6 +16178,11 @@ function panelHideGate(){
   document.documentElement.classList.remove('wb-panel-session');
   const gate = document.getElementById('panelGate');
   if(gate) gate.style.display = 'none';
+  const input = document.getElementById('panelPwdInput');
+  if(input){
+    input.disabled = true;
+    input.value = '';
+  }
 }
 
 async function submitPanelLogin(){
@@ -15798,6 +16289,9 @@ async function startDashboard(){
   // 但新壳每次都按拆分布局渲染，避免账号区被搬回总览。
   if(window.__NEXT_UI__) applyAccountsTabLayout(true);
   await initRealm();
+  const initialTab = MAIN_TABS.includes(window.__MAIN_TAB__)
+    ? window.__MAIN_TAB__ : (window.__NEXT_UI__ ? 'overview' : 'gateway');
+  if(initialTab === 'analytics') switchMainTab(initialTab);
   // 成长任务那条走上游、约 2 秒，只服务「任务与福利」页，而且它自己渲染。原来
   // 它在这一批 Promise.all 里，switchMainTab 因此被押到它后面——落在数据看板
   // 页签时，KPI 要等这两秒过去才开始发 /usage/analytics。这里只把它摘出来让它
@@ -15814,15 +16308,13 @@ async function startDashboard(){
   ]).catch(() => {});
   await Promise.all([
     loadAccounts(false, {deferActivity: true}),
-    refresh(),
+    initialTab === 'analytics' ? Promise.resolve() : refresh(),
   ]);
   secondary.catch(() => {});
   updateRecentLimitButtons();
   // The head script already resolved this before first paint; re-apply it
   // here so the data loaders for the active page actually run.
-  switchMainTab(MAIN_TABS.includes(window.__MAIN_TAB__)
-    ? window.__MAIN_TAB__
-    : (window.__NEXT_UI__ ? 'overview' : 'gateway'));
+  if(initialTab !== 'analytics') switchMainTab(initialTab);
   // 首屏把数据表接上排序：静态标记里就有的表不会被任何 loader 触发 render，
   // 轮询那条兜底要等 5 秒才轮到它。
   applyAllTableSorts();
@@ -15840,7 +16332,12 @@ async function startDashboard(){
     // 每 5 秒在任何页面都跑，顺带把页面上的数据表接上排序（见
     // applyAllTableSorts）：表本来就是 5 秒重画一次，扫描跟同一个节奏走，新加
     // 一张表不必在它的 render 函数里再写一行，下一轮自己就接上了。
-    setInterval(() => { if(!document.hidden){ refresh(); applyAllTableSorts(); } }, 5000),
+    setInterval(() => {
+      if(!document.hidden){
+        if(currentMainTab !== 'analytics') refresh(true);
+        applyAllTableSorts();
+      }
+    }, 5000),
     setInterval(() => { if(!document.hidden) loadSchedulerStatus(); }, 30000),
     // 账号轮询只在显示账号数据的页签上跑（见 accountsTabActive）。
     setInterval(() => { if(!document.hidden && accountsTabActive()) loadAccounts(true); }, 15000),
@@ -15851,7 +16348,7 @@ async function startDashboard(){
     // 的那一轮会排队补跑），所以不会与刚跑完的一轮重复。
     document.addEventListener('visibilitychange', () => {
       if(document.hidden || !PANEL_READY) return;
-      refresh();
+      if(currentMainTab !== 'analytics') refresh(true);
       if(accountsTabActive()) loadAccounts(true);
       loadSchedulerStatus();
       if(currentMainTab === 'analytics'){ loadAnalytics(); loadAnalyticsMatrix(); }
@@ -16281,12 +16778,12 @@ function navPageRows(){
    i18n 观察者翻译，切语言时也跟着 restore/walk 走，不用在这里额外重建一次。
    没被 walk 过的节点（界面一直是中文）没有 __wbSrc，textContent 本身就是原文。 */
 function navPageLabel(row){
-  // 新壳的导航文案与旧顶栏不同（任务与福利 → 自动化，数据看板 → 用量…），
+  // 新壳的导航文案与旧顶栏不同（任务与福利 → 自动化任务，数据看板 → 用量…），
   // 设置里的「顶部页签显示」要跟着新壳走，不能把旧标签又露出来。
   if(window.__NEXT_UI__){
     const nextLabels = {
-      gateway: '网关', accounts: '账号', tasks: '自动化', analytics: '用量',
-      agents: '智能体', settings: '设置', logs: '日志'
+      gateway: '网关', accounts: '账号', tasks: '自动化任务', analytics: '用量',
+      agents: '智能体', api: '接口', settings: '设置', logs: '日志'
     };
     if(nextLabels[row.key]) return nextLabels[row.key];
   }
@@ -16532,8 +17029,9 @@ const MEDIA_STATUS_BADGE = {
   completed: 'ok', failed: 'bad'
 };
 
-function applyMediaSettings(media){
+function applyMediaSettings(media, settings){
   const cfg = media || {};
+  const all = settings || {};
   const rate = document.getElementById('setMediaImageRate');
   if(rate && cfg.image_max_per_minute != null) rate.value = cfg.image_max_per_minute;
   const seconds = document.getElementById('setMediaVideoSeconds');
@@ -16542,6 +17040,10 @@ function applyMediaSettings(media){
   if(credits && cfg.daily_credits_per_key != null) credits.value = cfg.daily_credits_per_key;
   const conc = document.getElementById('setMediaVideoConcurrency');
   if(conc && cfg.video_concurrency != null) conc.value = cfg.video_concurrency;
+  const tts = document.getElementById('setTtsEnabled');
+  if(tts && all.tts_enabled != null) tts.checked = all.tts_enabled === true;
+  const asr = document.getElementById('setAsrEnabled');
+  if(asr && all.asr_enabled != null) asr.checked = all.asr_enabled === true;
   const state = document.getElementById('setMediaState');
   if(state){
     state.textContent = '(始终开启)';
@@ -16561,12 +17063,14 @@ async function saveMediaConfig(btn){
       video_max_seconds: num('setMediaVideoSeconds', 15),
       daily_credits_per_key: num('setMediaDailyCredits', 0),
       video_concurrency: num('setMediaVideoConcurrency', 3)
-    }
+    },
+    tts_enabled: !!(document.getElementById('setTtsEnabled') || {}).checked,
+    asr_enabled: !!(document.getElementById('setAsrEnabled') || {}).checked
   };
   if(btn) btn.disabled = true;
   try{
     const res = await postJSON('/settings/save', payload);
-    if(res && res.media) applyMediaSettings(res.media);
+    if(res) applyMediaSettings(res.media, res);
     toast('媒体设置已保存');
     loadSettings();
   }catch(e){
@@ -16773,8 +17277,8 @@ function toggleConsoleLayout(evt){
 // ==== 全局控制台导航开始 ====
 const CONSOLE_COLLAPSE_KEY = 'wb-console-nav-collapsed';
 const CONSOLE_PAGE_LABELS = {
-  gateway: '运行概览', accounts: '账号管理', tasks: '任务与福利',
-  media: '媒体', analytics: '数据看板', logs: '运行日志', settings: '网关设置', agents: '智能体接入'
+  gateway: '运行概览', accounts: '账号', tasks: '自动化任务',
+  media: '媒体', analytics: '用量', logs: '日志', settings: '设置', agents: '智能体', api: '接口'
 };
 function consoleNavIsMobile(){
   return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
@@ -17045,7 +17549,7 @@ async function loadSettings(showToast, opts){
     // 后端没这个字段）都保持上游那个合并的「网关与账号」页。
     const separateTab = data.accounts_separate_tab === true;
     applyAccountsTabLayout(window.__NEXT_UI__ || separateTab);
-    applyMediaSettings(data.media);
+    applyMediaSettings(data.media, data);
     const separateState = document.getElementById('setAccountsSeparateState');
     if(separateState) separateState.textContent = separateTab ? '(已开启)' : '(默认：合并)';
     const separateInput = document.getElementById('setAccountsSeparate');
@@ -17301,6 +17805,40 @@ async function loadSettings(showToast, opts){
         localWebState.textContent = localWeb ? '(已启用)' : '(直通)';
         localWebState.style.color = localWeb ? 'var(--accent2)' : 'var(--dim)';
       }
+      const gateway = (data.web_gateway && typeof data.web_gateway === 'object') ? data.web_gateway : {};
+      window.__wbGateway = gateway;
+      const gwState = document.getElementById('setWebGatewayState');
+      if(gwState){
+        gwState.textContent = gateway.enabled ? '(已启用)' : '(关闭)';
+        gwState.style.color = gateway.enabled ? 'var(--accent2)' : 'var(--dim)';
+      }
+      const gwBox = document.getElementById('setWebGateway');
+      if(gwBox) gwBox.checked = gateway.enabled === true;
+      const gwProtocols = Array.isArray(gateway.inject_protocols) ? gateway.inject_protocols : [];
+      const gwAnth = document.getElementById('setInjectAnthropic');
+      if(gwAnth) gwAnth.checked = gwProtocols.indexOf('anthropic') >= 0;
+      const gwResp = document.getElementById('setInjectResponses');
+      if(gwResp) gwResp.checked = gwProtocols.indexOf('responses') >= 0;
+      const gwGemini = document.getElementById('setInjectGemini');
+      if(gwGemini) gwGemini.checked = gwProtocols.indexOf('gemini') >= 0;
+      const gwMode = document.getElementById('setWebSearchMode');
+      if(gwMode) gwMode.value = gateway.web_search_mode || 'multi';
+      const gwPick = (list, name) => (Array.isArray(list) ? list : []).filter(x => x && x.name === name)[0] || {};
+      const gwSearchWb = gwPick(gateway.search_providers, 'workbuddy');
+      const gwSearchLocal = gwPick(gateway.search_providers, 'local-engines');
+      const gwFetchWb = gwPick(gateway.fetch_providers, 'workbuddy');
+      const gwFetchLocal = gwPick(gateway.fetch_providers, 'local-http');
+      const gwSearchWbBox = document.getElementById('setSearchWorkbuddy');
+      if(gwSearchWbBox) gwSearchWbBox.checked = !!gwSearchWb.enabled;
+      const gwSearchLocalBox = document.getElementById('setSearchLocal');
+      if(gwSearchLocalBox) gwSearchLocalBox.checked = !!gwSearchLocal.enabled;
+      const gwFetchWbBox = document.getElementById('setFetchWorkbuddy');
+      if(gwFetchWbBox) gwFetchWbBox.checked = !!gwFetchWb.enabled;
+      const gwFetchLocalBox = document.getElementById('setFetchLocal');
+      if(gwFetchLocalBox) gwFetchLocalBox.checked = !!gwFetchLocal.enabled;
+      const gwRealm = document.getElementById('setWorkbuddyRealm');
+      if(gwRealm) gwRealm.value = gwSearchWb.realm || 'all';
+      loadWebGatewayAccounts(gwSearchWb.allowed_uids);
       const remainingPriority = data.remaining_priority_enabled === true;
       const remainingPriorityInput = document.getElementById('setRemainingPriority');
       if(remainingPriorityInput) remainingPriorityInput.checked = remainingPriority;
@@ -17348,7 +17886,7 @@ async function loadSettings(showToast, opts){
           poolSeparationState.style.color = poolSeparation ? 'var(--accent2)' : 'var(--dim)';
         }
       }
-      applyPoolSeparationUi();
+      applyPoolSeparationUi(poolSeparationEffective || poolSeparation);
       const holdSec = typeof data.restriction_hold_seconds === 'number' ? data.restriction_hold_seconds : 1800;
       const holdInput = document.getElementById('setRestrictionHoldSeconds');
       if(holdInput) holdInput.value = holdSec;
@@ -18091,10 +18629,12 @@ function renderIdentityVersions(){
   if(summary){
     summary.innerHTML = IDENTITY_VERSION_FIELDS.map(function(item){
       const key = item[0], label = item[1];
-      const fallback = IDENTITY_VERSION_DEFAULTS[key] || '-';
-      const current = IDENTITY_VERSION_CURRENT[key] || fallback;
-      const changed = IDENTITY_VERSION_CURRENT[key]
-        && IDENTITY_VERSION_CURRENT[key] !== IDENTITY_VERSION_DEFAULTS[key];
+      const defaultValue = IDENTITY_VERSION_DEFAULTS[key] || '-';
+      const cnDefault = key === 'desktop_cli' && IDENTITY_VERSION_DEFAULTS.desktop_cli_cn;
+      const fallback = cnDefault ? 'CN ' + cnDefault + ' / INTL ' + defaultValue : defaultValue;
+      const override = IDENTITY_VERSION_CURRENT[key];
+      const current = override || fallback;
+      const changed = override && (override !== defaultValue || (cnDefault && override !== cnDefault));
       return '<div>' + esc(label) + '：<span class="mono" style="color:var(--fg)">'
         + esc(current) + '</span> '
         + (changed
@@ -18108,9 +18648,16 @@ function renderIdentityVersions(){
     if(el) el.value = IDENTITY_VERSION_CURRENT[item[0]] || '';
   });
 }
-function toggleIdentityVersionEditor(){
+function toggleIdentityVersionEditor(open){
   const el = document.getElementById('identityVersionEditor');
-  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if(!el) return;
+  const show = open === undefined ? el.style.display === 'none' : open;
+  el.style.display = show ? 'block' : 'none';
+  const password = document.getElementById('setIdentityVersionPassword');
+  if(password){
+    password.disabled = !show;
+    if(!show) password.value = '';
+  }
 }
 async function saveIdentityVersions(btn){
   const passwordEl = document.getElementById('setIdentityVersionPassword');
@@ -18126,9 +18673,7 @@ async function saveIdentityVersions(btn){
   try {
     await postJSON('/settings/save', {identity_versions: versions, panel_password: password});
     toast('出站身份版本号已保存', 'ok');
-    if(passwordEl) passwordEl.value = '';
-    const editor = document.getElementById('identityVersionEditor');
-    if(editor) editor.style.display = 'none';
+    toggleIdentityVersionEditor(false);
     loadSettings();
   } catch(e) {
     toast('保存失败: ' + e.message, 'bad');
@@ -18554,6 +19099,101 @@ async function saveLocalWebTools(btn){
   }
 }
 
+async function loadWebGatewayAccounts(selected){
+  const box = document.getElementById('wbAccountList');
+  if(!box) return;
+  try {
+    const data = await getJSON('/accounts?realm=all');
+    const rows = (data && data.accounts) || [];
+    box.innerHTML = '';
+    if(!rows.length){ box.textContent = '尚无账号'; return; }
+    const allow = Array.isArray(selected) ? selected : null;
+    rows.forEach(function(a){
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.dataset.uid = a.uid || '';
+      cb.checked = allow ? allow.indexOf(a.uid) >= 0 : true;
+      cb.style.cssText = 'width:14px;height:14px';
+      const realm = a.realm === 'cn' ? '国内' : '国际';
+      const state = a.tokenExpired ? ' · token 过期' : (a.enabled ? '' : ' · 已停用');
+      const text = document.createElement('span');
+      text.textContent = (a.nickname || a.uid || '?') + ' · ' + realm + state;
+      label.appendChild(cb);
+      label.appendChild(text);
+      box.appendChild(label);
+    });
+  } catch(e) {
+    box.textContent = '账号加载失败: ' + e.message;
+  }
+}
+
+function toggleAllWebAccounts(on){
+  document.querySelectorAll('#wbAccountList input[type=checkbox]').forEach(function(cb){
+    cb.checked = !!on;
+  });
+}
+
+function selectedWebAccounts(){
+  const boxes = Array.prototype.slice.call(
+    document.querySelectorAll('#wbAccountList input[type=checkbox]'));
+  if(!boxes.length) return null;
+  const uids = boxes.filter(function(cb){ return cb.checked; })
+                    .map(function(cb){ return cb.dataset.uid; })
+                    .filter(Boolean);
+  if(uids.length === boxes.length) return null;
+  return uids;
+}
+
+async function saveWebGateway(){
+  const on = id => { const el = document.getElementById(id); return !!(el && el.checked); };
+  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const prev = (window.__wbGateway && typeof window.__wbGateway === 'object') ? window.__wbGateway : {};
+  const prevPick = (list, name) => (Array.isArray(list) ? list : []).filter(x => x && x.name === name)[0] || {};
+  const pickedAccounts = selectedWebAccounts();
+  const accountBoxes = document.querySelectorAll('#wbAccountList input[type=checkbox]');
+  if(accountBoxes.length && Array.isArray(pickedAccounts) && pickedAccounts.length === 0){
+    toast('指定账号至少选一个，或全部勾选表示不限', 'bad');
+    return;
+  }
+  const payload = {
+    enabled: on('setWebGateway'),
+    web_search_mode: val('setWebSearchMode') || 'multi',
+    inject_in_protocols: on('setInjectAnthropic') || on('setInjectResponses')
+      || on('setInjectGemini'),
+    inject_protocols: []
+      .concat(on('setInjectAnthropic') ? ['anthropic'] : [])
+      .concat(on('setInjectResponses') ? ['responses'] : [])
+      .concat(on('setInjectGemini') ? ['gemini'] : []),
+    search_providers: [
+      Object.assign({}, prevPick(prev.search_providers, 'workbuddy'), {
+        name: 'workbuddy', enabled: on('setSearchWorkbuddy'),
+        priority: 10, fallback: true, realm: val('setWorkbuddyRealm') || 'all',
+        allowed_uids: pickedAccounts
+      }),
+      Object.assign({}, prevPick(prev.search_providers, 'local-engines'), {
+        name: 'local-engines', enabled: on('setSearchLocal'), priority: 20, fallback: true
+      })
+    ],
+    fetch_providers: [
+      Object.assign({}, prevPick(prev.fetch_providers, 'workbuddy'), {
+        name: 'workbuddy', enabled: on('setFetchWorkbuddy'), priority: 10, fallback: true
+      }),
+      Object.assign({}, prevPick(prev.fetch_providers, 'local-http'), {
+        name: 'local-http', enabled: on('setFetchLocal'), priority: 20, fallback: true
+      })
+    ]
+  };
+  try {
+    await postJSON('/settings/save', {web_gateway: payload});
+    toast('网页工具网关已保存', 'ok');
+    loadSettings();
+  } catch(e) {
+    toast('保存失败: ' + e.message, 'bad');
+  }
+}
+
 async function saveRemainingPriority(btn){
   const el = document.getElementById('setRemainingPriority');
   const value = !!(el && el.checked);
@@ -18660,7 +19300,7 @@ async function savePoolSeparation(btn){
     toast(value ? '已启用：按号池标签限制派发'
                 : '已关闭：所有账号都可服务文本与媒体', 'ok');
     if(typeof loadSettings === 'function') await loadSettings();
-    else applyPoolSeparationUi();
+    else applyPoolSeparationUi(value);
   } catch(e) {
     toast('保存失败: ' + e.message, 'bad');
   } finally {
@@ -20628,6 +21268,7 @@ function switchMainTab(tab){
   if(!window.__NEXT_UI__ && tab === 'overview') tab = 'gateway';
   const prevTab = currentMainTab;
   currentMainTab = tab;
+  if(prevTab === 'settings' && tab !== 'settings') toggleIdentityVersionEditor(false);
   syncConsoleContext(tab);
   // 从不轮询账号的页签切过来：立刻拉一次，不等下一轮 15 秒。
   if(PANEL_READY && accountsTabActive(tab) && !accountsTabActive(prevTab)) loadAccounts(true);
@@ -20649,6 +21290,7 @@ function switchMainTab(tab){
   const btnLogs = document.getElementById('btnNavLogs');
   const btnSettings = document.getElementById('btnNavSettings');
   const btnAgents = document.getElementById('btnNavAgents');
+  const btnApi = document.getElementById('btnNavApi');
   const pageOverview = document.getElementById('pageOverview');
   const btnMedia = document.getElementById('btnNavMedia');
   const pageGateway = document.getElementById('pageGateway');
@@ -20658,17 +21300,19 @@ function switchMainTab(tab){
   const pageLogs = document.getElementById('pageLogs');
   const pageSettings = document.getElementById('pageSettings');
   const pageAgents = document.getElementById('pageAgents');
+  const pageApi = document.getElementById('pageApi');
   const pageMedia = document.getElementById('pageMedia');
   const tabs = [
     ['overview', btnOverview, pageOverview],
     ['gateway', btnGateway, pageGateway],
     ['accounts', btnAccounts, pageAccounts],
-    ['tasks', btnTasks, pageTasks],
+    ['api', btnApi, pageApi],
     ['analytics', btnAnalytics, pageAnalytics],
-    ['logs', btnLogs, pageLogs],
-    ['settings', btnSettings, pageSettings],
+    ['tasks', btnTasks, pageTasks],
     ['agents', btnAgents, pageAgents],
-    ['media', btnMedia, pageMedia]
+    ['media', btnMedia, pageMedia],
+    ['settings', btnSettings, pageSettings],
+    ['logs', btnLogs, pageLogs]
   ];
   tabs.forEach(([name, btn, page]) => {
     if(!page) return;
@@ -20685,12 +21329,11 @@ function switchMainTab(tab){
     if(on) initPageNav(page);
   });
   if(!window.__NEXT_UI__ && tab === 'gateway') applyConsoleView('overview');
-  if(tab === 'tasks'){ loadGrowthTasks(); }
-  if(tab === 'accounts' || (!_accountsSeparateTab && tab === 'gateway')){ loadActivityBoard(); }
-  if(window.__NEXT_UI__ && !_accountsSeparateTab && tab === 'overview'){ loadActivityBoard(); }
+  if(tab === 'tasks'){ loadGrowthTasks(); loadActivityBoard(); }
   if(tab === 'analytics'){ loadAnalytics(); loadAnalyticsMatrix(); }
   if(tab === 'settings'){ loadSettings(); loadProxySlots(); }
   if(tab === 'agents'){ loadAgents(); }
+  if(tab === 'api'){ loadExternalApiPage(); }
   if(tab === 'media'){ loadMediaPage(); }
   if(tab === 'logs'){
     startLogPolling();
@@ -20699,6 +21342,251 @@ function switchMainTab(tab){
     stopLogPolling();
   }
   restorePageNavHash();
+}
+
+const EXTERNAL_API_SCOPE_LABELS = {
+  'account:auth': '账号授权',
+  'account:read': '读取账号',
+};
+const EXTERNAL_API_DOCS = {
+  authorize: {
+    title: '创建账号授权请求', method: 'POST', path: '/v1/accounts/authorize',
+    scope: 'account:auth',
+    contract: '传入 cn 或 intl。服务端生成一次性授权链接；浏览器完成登录后，用返回的 request_id 查询结果。',
+    params: [
+      ['realm', 'string', '是', 'cn / intl；决定本次授权使用的版本。'],
+    ],
+    request: {method: 'POST', path: '/v1/accounts/authorize', headers: {Authorization: 'Bearer sk-ext-your-key', 'Content-Type': 'application/json'}, body: {realm: 'intl'}},
+    response: {request_id: 'ar_demo_7mQp2x', status: 'pending', realm: 'intl', auth_url: 'https://example.com/login?...'},
+    curl: function(){
+      return [
+        "curl -X POST '" + location.origin + "/v1/accounts/authorize' \\",
+        "  -H 'Authorization: Bearer sk-ext-your-key' \\",
+        "  -H 'Content-Type: application/json' \\",
+        "  -d '{\"realm\":\"intl\"}'"
+      ].join("\n");
+    },
+  },
+  'authorize-status': {
+    title: '查询账号授权状态', method: 'GET', path: '/v1/accounts/authorize/{request_id}',
+    scope: 'account:auth',
+    contract: '浏览器登录完成前返回 pending；成功后返回脱敏账号资料。终态会短暂保留，重复查询仍可读取。',
+    params: [
+      ['request_id', 'string', '是', '创建授权请求时返回的请求标识。'],
+    ],
+    request: {method: 'GET', path: '/v1/accounts/authorize/ar_demo_7mQp2x', headers: {Authorization: 'Bearer sk-ext-your-key'}},
+    response: {request_id: 'ar_demo_7mQp2x', status: 'ok', realm: 'intl', account: {uid: 'uid_demo', nickname: '账号昵称', realm: 'intl', enabled: true, health: 'healthy', health_summary: 'healthy'}},
+    curl: function(){
+      return [
+        "curl '" + location.origin + "/v1/accounts/authorize/ar_demo_7mQp2x' \\",
+        "  -H 'Authorization: Bearer sk-ext-your-key'"
+      ].join("\n");
+    },
+  },
+  accounts: {
+    title: '读取账号列表', method: 'GET', path: '/v1/accounts?realm=intl',
+    scope: 'account:read',
+    contract: 'realm 是必填查询参数，只能取 cn 或 intl。返回指定版本的账号脱敏信息，不返回任何 token 或代理凭据。',
+    params: [
+      ['realm', 'query string', '是', 'cn / intl；筛选账号版本。'],
+    ],
+    request: {method: 'GET', path: '/v1/accounts?realm=intl', headers: {Authorization: 'Bearer sk-ext-your-key'}, query: {realm: 'intl'}},
+    response: {object: 'list', realm: 'intl', accounts: [{uid: 'uid_demo', nickname: '账号昵称', realm: 'intl', enabled: true, health: 'healthy', health_summary: 'healthy'}]},
+    curl: function(){
+      return [
+        "curl '" + location.origin + "/v1/accounts?realm=intl' \\",
+        "  -H 'Authorization: Bearer sk-ext-your-key'"
+      ].join("\n");
+    },
+  },
+};
+
+function selectExternalApiPanel(panel, button){
+  const isDocs = panel === 'docs';
+  const keyPane = document.getElementById('apiPaneKeys');
+  const docsPane = document.getElementById('apiPaneDocs');
+  const keyTab = document.getElementById('apiKeyTab');
+  const docsTab = document.getElementById('apiDocsTab');
+  if(keyPane) keyPane.hidden = isDocs;
+  if(docsPane) docsPane.hidden = !isDocs;
+  [keyTab, docsTab].forEach(function(tab){
+    if(!tab) return;
+    const active = tab === (button || (isDocs ? docsTab : keyTab));
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  if(isDocs) renderExternalApiDoc(window.EXTERNAL_API_DOC_SELECTED || 'authorize');
+  else { loadExternalApiKeys(); loadExternalApiRecords(); }
+}
+
+function toggleExternalApiKeyForm(force){
+  const form = document.getElementById('externalApiKeyForm');
+  if(!form) return;
+  form.hidden = force === undefined ? !form.hidden : !force;
+  if(!form.hidden){
+    const name = document.getElementById('externalApiKeyName');
+    if(name) name.focus();
+  }
+}
+
+function externalScopeLabels(scopes){
+  return (scopes || []).map(function(scope){
+    return '<span class="api-scope-chip">' + esc(scope) + ' · ' + esc(EXTERNAL_API_SCOPE_LABELS[scope] || scope) + '</span>';
+  }).join('');
+}
+
+function renderExternalApiKeys(data){
+  const box = document.getElementById('externalApiKeys');
+  if(!box) return;
+  const keys = (data && data.keys) || [];
+  if(!keys.length){
+    box.innerHTML = '<div class="empty">还没有外部 API Key，点击右上角「+ 新建 API Key」创建。</div>';
+    return;
+  }
+  box.innerHTML = '<div class="table-wrap"><table class="api-table"><thead><tr>'
+    + '<th>名称</th><th>密钥</th><th>权限</th><th>状态</th><th>创建时间</th><th style="text-align:right">操作</th>'
+    + '</tr></thead><tbody>' + keys.map(function(row){
+      const enabled = row.enabled !== false;
+      return '<tr>'
+        + '<td><span class="api-key-name">' + esc(row.name || '未命名') + '</span><span class="api-key-meta">ID ' + esc(row.id || '—') + '</span></td>'
+        + '<td class="mono">' + esc(row.masked || '—') + '</td>'
+        + '<td>' + (externalScopeLabels(row.scopes) || '—') + '</td>'
+        + '<td><span class="api-status-dot' + (enabled ? '' : ' off') + '">' + (enabled ? '启用' : '停用') + '</span></td>'
+        + '<td>' + esc(row.created_at || '—') + '</td>'
+        + '<td style="text-align:right;white-space:nowrap">'
+        + '<button class="sec mini" onclick="toggleExternalApiKey(\'' + esc(row.id) + '\',' + (!enabled) + ')">' + (enabled ? '停用' : '启用') + '</button> '
+        + '<button class="sec mini" onclick="deleteExternalApiKey(\'' + esc(row.id) + '\')">删除</button>'
+        + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+async function loadExternalApiKeys(){
+  try { renderExternalApiKeys(await getJSON('/api/external/keys')); }
+  catch(e){ const box = document.getElementById('externalApiKeys'); if(box) box.innerHTML = '<div class="empty" style="color:var(--bad)">加载 API Key 失败：' + esc(e.message) + '</div>'; }
+}
+
+async function createExternalApiKey(btn){
+  const name = (document.getElementById('externalApiKeyName') || {}).value || '';
+  const scopes = [];
+  if(document.getElementById('externalScopeAuth')?.checked) scopes.push('account:auth');
+  if(document.getElementById('externalScopeRead')?.checked) scopes.push('account:read');
+  if(!scopes.length){ toast('至少选择一个权限', 'warn'); return; }
+  if(btn) btn.disabled = true;
+  try {
+    const data = await postJSON('/api/external/keys', {action:'create', name:name.trim(), scopes:scopes});
+    const reveal = document.getElementById('externalApiSecretReveal');
+    if(reveal){ reveal.hidden = false; reveal.innerHTML = '<b>新 Key 只在这里完整显示一次，请立即复制保存。</b><code id="externalApiSecretValue">' + esc(data.key || '') + '</code><button class="sec mini" style="margin-top:7px" onclick="copyExternalApiSecret()">复制 Key</button>'; }
+    toggleExternalApiKeyForm(false);
+    const input = document.getElementById('externalApiKeyName'); if(input) input.value = '';
+    await loadExternalApiKeys();
+    toast('外部 API Key 已创建', 'ok');
+  } catch(e){ toast('创建失败：' + e.message, 'bad'); }
+  finally { if(btn) btn.disabled = false; }
+}
+
+async function toggleExternalApiKey(id, enabled){
+  try { await postJSON('/api/external/keys', {action:'update', id:id, enabled:enabled}); await loadExternalApiKeys(); toast(enabled ? 'API Key 已启用' : 'API Key 已停用', 'ok'); }
+  catch(e){ toast('更新失败：' + e.message, 'bad'); }
+}
+
+async function deleteExternalApiKey(id){
+  if(!confirm('删除后这个 Key 将立即失效，历史调用记录仍会保留。确定删除吗？')) return;
+  try { await postJSON('/api/external/keys', {action:'delete', id:id}); await loadExternalApiKeys(); await loadExternalApiRecords(); toast('API Key 已删除', 'ok'); }
+  catch(e){ toast('删除失败：' + e.message, 'bad'); }
+}
+
+async function copyExternalApiSecret(){
+  const el = document.getElementById('externalApiSecretValue');
+  if(!el) return;
+  try { await writeClipboard(el.textContent || ''); toast('Key 已复制', 'ok'); }
+  catch(e){ toast('复制失败：' + e.message, 'bad'); }
+}
+
+const EXTERNAL_API_RECORD_PAGE_SIZE = 20;
+let externalApiRecordPage = 1;
+let externalApiRecordRequestSeq = 0;
+
+function externalApiRecordPagerHtml(page, pages, total){
+  if(pages <= 1) return '';
+  const pageList = typeof generatePageList === 'function'
+    ? generatePageList(page, pages)
+    : Array.from({length: pages}, function(_, index){ return index + 1; });
+  return '<div id="externalApiRecordPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);flex-wrap:wrap;gap:8px">'
+    + '<div id="externalApiRecordPageInfo">第 ' + page + ' / ' + pages + ' 页 · 共 ' + fmt(total) + ' 条记录</div>'
+    + '<div style="display:inline-flex;gap:5px;align-items:center">'
+    + '<button class="sec mini" id="btnExternalApiRecordPrev" onclick="gotoExternalApiRecordPage(' + (page - 1) + ')"' + (page <= 1 ? ' disabled' : '') + '>上一页</button>'
+    + '<div id="externalApiRecordPageButtons" style="display:inline-flex;gap:3px;align-items:center">'
+    + pageList.map(function(item){
+        if(item === '...') return '<span style="color:var(--dim);padding:0 3px">…</span>';
+        return '<button class="range-btn' + (item === page ? ' active' : '') + '" style="min-width:26px;padding:3px 6px;font-size:11px" onclick="gotoExternalApiRecordPage(' + item + ')">' + item + '</button>';
+      }).join('')
+    + '</div>'
+    + '<button class="sec mini" id="btnExternalApiRecordNext" onclick="gotoExternalApiRecordPage(' + (page + 1) + ')"' + (page >= pages ? ' disabled' : '') + '>下一页</button>'
+    + '</div></div>';
+}
+
+function renderExternalApiRecords(data){
+  const box = document.getElementById('externalApiRecords');
+  if(!box) return;
+  const rows = (data && data.records) || [];
+  const page = Math.max(1, Number(data && data.page) || externalApiRecordPage || 1);
+  const pages = Math.max(1, Number(data && data.pages) || 1);
+  const total = Math.max(0, Number(data && data.total) || rows.length);
+  externalApiRecordPage = Math.min(page, pages);
+  if(!rows.length){ box.innerHTML = '<div class="empty">暂无外部 API 调用记录</div>'; return; }
+  box.innerHTML = '<div class="table-wrap"><table class="api-table"><thead><tr><th>时间</th><th>调用方</th><th>请求</th><th>版本</th><th>结果</th><th>耗时</th></tr></thead><tbody>'
+    + rows.map(function(row){
+      const ok = Number(row.status || 0) >= 200 && Number(row.status || 0) < 400;
+      return '<tr><td class="mono">' + esc(row.iso || '—') + '</td><td>' + esc(row.key_name || '—') + '</td><td class="mono">' + esc((row.method || '') + ' ' + (row.path || '')) + '</td><td>' + esc(row.realm || '—') + '</td><td><span class="api-status-dot' + (ok ? '' : ' off') + '">' + esc(String(row.status || '—')) + '</span></td><td>' + esc(row.elapsed_ms == null ? '—' : row.elapsed_ms + ' ms') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' + externalApiRecordPagerHtml(externalApiRecordPage, pages, total);
+}
+
+async function loadExternalApiRecords(page){
+  if(page !== undefined) externalApiRecordPage = Math.max(1, Number(page) || 1);
+  const requestedPage = externalApiRecordPage;
+  const requestSeq = ++externalApiRecordRequestSeq;
+  try {
+    const data = await getJSON('/api/external/call-records?page=' + requestedPage + '&page_size=' + EXTERNAL_API_RECORD_PAGE_SIZE);
+    if(requestSeq !== externalApiRecordRequestSeq) return;
+    renderExternalApiRecords(data);
+  } catch(e){
+    if(requestSeq !== externalApiRecordRequestSeq) return;
+    const box = document.getElementById('externalApiRecords');
+    if(box) box.innerHTML = '<div class="empty" style="color:var(--bad)">加载调用记录失败：' + esc(e.message) + '</div>';
+  }
+}
+
+function gotoExternalApiRecordPage(page){
+  const target = Math.max(1, Number(page) || 1);
+  if(target === externalApiRecordPage) return;
+  loadExternalApiRecords(target);
+}
+
+function renderExternalApiDoc(id){
+  const doc = EXTERNAL_API_DOCS[id] || EXTERNAL_API_DOCS.authorize;
+  window.EXTERNAL_API_DOC_SELECTED = id in EXTERNAL_API_DOCS ? id : 'authorize';
+  const detail = document.getElementById('apiDocDetail');
+  if(!detail) return;
+  document.querySelectorAll('#apiDocList .api-doc-item').forEach(function(item){ item.classList.toggle('active', item.getAttribute('data-doc') === window.EXTERNAL_API_DOC_SELECTED); });
+  const rows = (doc.params || []).map(function(row){ return '<tr><td class="mono">' + esc(row[0]) + '</td><td>' + esc(row[1]) + '</td><td>' + esc(row[2]) + '</td><td>' + esc(row[3]) + '</td></tr>'; }).join('');
+  detail.innerHTML = '<div class="api-section-head"><div><h3>' + esc(doc.title) + '</h3><p><span class="api-doc-method">' + esc(doc.method) + '</span> <span class="mono">' + esc(doc.path) + '</span></p></div><span class="api-scope-chip">需要 ' + esc(doc.scope) + '</span></div>'
+    + '<section><h3>接口约定</h3><div class="api-doc-contract">' + esc(doc.contract) + '</div></section>'
+    + '<section><h3>请求参数</h3><table class="api-param-table"><thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody>' + rows + '</tbody></table></section>'
+    + '<section><h3>完整 cURL 示例</h3><pre class="api-doc-pre">' + esc(doc.curl()) + '</pre></section>'
+    + '<section><h3>请求实例</h3><pre class="api-doc-pre">' + esc(JSON.stringify(doc.request, null, 2)) + '</pre></section>'
+    + '<section><h3>响应示例</h3><pre class="api-doc-pre">' + esc(JSON.stringify(doc.response, null, 2)) + '</pre></section>';
+}
+
+function selectExternalApiDoc(id, button){
+  window.EXTERNAL_API_DOC_SELECTED = id;
+  document.querySelectorAll('#apiDocList .api-doc-item').forEach(function(item){ item.classList.toggle('active', item === button || item.getAttribute('data-doc') === id); });
+  renderExternalApiDoc(id);
+}
+
+function loadExternalApiPage(){
+  loadExternalApiKeys();
+  loadExternalApiRecords();
+  renderExternalApiDoc(window.EXTERNAL_API_DOC_SELECTED || 'authorize');
 }
 
 /* ---- 智能体一键配置模块 ----
@@ -20817,7 +21705,7 @@ function renderAgentConnForm(){
       if(!id) return;
       // 只列「网关模型清单」里勾选的模型：一键配置只写这份清单，下拉里出现
       // 没勾选的模型会让用户以为它也会被写进去。
-      if(!isModelPicked(id)) return;
+      if(!isSavedModelPicked(id)) return;
       const cw = (typeof m === 'object' && m) ? (m.context_window || m.contextWindow || 0) : 0;
       const label = id + (cw ? ' (' + fmt(cw) + ' ctx)' : '');
       html += '<option value="' + esc(id) + '">' + esc(label) + '</option>';
@@ -20942,7 +21830,7 @@ async function applyAgent(id, btn){
   // 这类客户端收到空列表会返回 400，这里给一句更明确的下一步提示。
   const pickedModels = (AGENT_MODELS || [])
     .map(m => String((typeof m === 'object' ? (m.id || m.model || '') : m) || ''))
-    .filter(id => id && isModelPicked(id));
+    .filter(id => id && isSavedModelPicked(id));
   // 只有把模型清单写进自身配置的客户端（DSH / OpenCode / Crush / ZCode，
   // 后端 /agents 的 model_embedding_clients 声明）才需要「至少勾一个」；
   // Claude Code / Codex 不读这份清单，别因为没勾模型就把它们的一键配置也挡掉。
@@ -22607,50 +23495,6 @@ const state = {
 };
 let prevSummary = null; /* B 版：上一等长周期汇总（环比） */
 
-/* ---------- B 版：环比 / sparkline / 环形卡 / 活动流 ---------- */
-function prevRange(untilAt){
-  // 环比窗口的上界同样来自调用方：轮询时与 rangeParams 共用同一个量化时刻，
-  // 否则 /usage/timeseries?…&until=… 这一条照样每轮都换 URL。
-  const now = (untilAt === undefined || untilAt === null) ? Math.floor(Date.now() / 1000) : untilAt;
-  if (state.range === 'today'){
-    const d = new Date(); d.setHours(0,0,0,0);
-    const startToday = Math.floor(d.getTime() / 1000);
-    const span = now - startToday;
-    return [startToday - 86400, startToday - 86400 + span];
-  }
-  if (state.range === 'week'){
-    const dowMon = (new Date().getDay() + 6) % 7;
-    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - dowMon);
-    const startWeek = Math.floor(d.getTime() / 1000);
-    const span = now - startWeek;
-    return [startWeek - 7 * 86400, startWeek - 7 * 86400 + span];
-  }
-  if (state.range === 'month'){
-    const d = new Date();
-    const startMonth = Math.floor(new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0).getTime() / 1000);
-    const span = now - startMonth;
-    const startPrev = Math.floor(new Date(d.getFullYear(), d.getMonth() - 1, 1, 0,0,0).getTime() / 1000);
-    return [startPrev, startPrev + span];
-  }
-  if (state.range === 'd3')  return [now - 6 * 86400, now - 3 * 86400];
-  if (state.range === 'd30') return [now - 60 * 86400, now - 30 * 86400];
-  return null;
-}
-async function loadPrevSummary(untilAt){
-  const pr = prevRange(untilAt);
-  if (!pr) return null;
-  try{
-    const p = await api(`/usage/timeseries?realm=all&range=custom&since=${pr[0]}&until=${pr[1]}`);
-    const t = (p.series || []).reduce((a, b) => ({
-      tok:    a.tok    + (b.total_tokens   || 0),
-      req:    a.req    + (b.requests       || 0),
-      cred:   a.cred   + (b.credit         || 0),
-      cached: a.cached + (b.cached_tokens  || 0),
-      prompt: a.prompt + (b.prompt_tokens  || 0),
-    }), {tok:0, req:0, cred:0, cached:0, prompt:0});
-    return (t.req || t.tok) ? t : null;
-  }catch(e){ return null; }
-}
 function deltaBadge(cur, prev){
   if (prev == null || !isFinite(prev) || prev === 0 || cur == null) return '';
   const d = (cur - prev) / Math.abs(prev) * 100;
@@ -22711,12 +23555,32 @@ function recentStamp(iso){
   const today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   return s.slice(0, 10) === today ? time : s.slice(5, 16);
 }
+let recentListRevision = '';
+let recentListRows = [];
+const recentListKeys = new WeakMap();
 async function loadRecent(){
   try{
-    const r = await api('/usage/recent?limit=12');
-    const rows = r.rows || [];
-    $('recentMeta').textContent = `共 ${fmtCompact(r.total || 0)} 条记录`;
-    $('recentList').innerHTML = rows.map(x => {
+    const r = await api('/usage/recent?limit=12&watch=1&rev=' + recentListRevision, {});
+    const list = $('recentList');
+    if(!r.unchanged){
+      recentListRevision = r.revision || '';
+      recentListRows = r.rows || [];
+      $('recentMeta').textContent = `共 ${fmtCompact(r.total || 0)} 条记录`;
+    }
+    if(!recentListRows.length){
+      if(!r.unchanged) list.innerHTML = '<div class="empty">暂无请求记录</div>';
+      return;
+    }
+    const previous = new Map();
+    for(const node of list.children){
+      const key = recentListKeys.get(node);
+      if(key) {
+        if(!previous.has(key)) previous.set(key, []);
+        previous.get(key).push(node);
+      }
+    }
+    const displayed = new Set();
+    recentListRows.forEach((x, i) => {
       const ok = x.outcome === 'completed';
       const nm = nicknameOf(x.account);
       // 失败行原来只有一个 [failed] 标签；把 HTTP 码带上、上游原话挂进悬停气泡，
@@ -22727,32 +23591,23 @@ async function loadRecent(){
       const tag = ok ? ''
         : ' <span class="err"' + (whyText ? ' data-tip="' + esc(whyText) + '"' : '')
           + '>[' + esc(x.outcome || '失败') + (code ? ' ' + esc(code) : '') + ']</span>';
-      return `<div class="recent-item">
-        <span class="t">${recentStamp(x.iso)}</span>
-        <span class="m"><b>${x.model || ''}</b> → ${nm.length > 16 ? nm.slice(0, 16) + '…' : nm}${tag}</span>
-        <span class="r"><b>${fmtCompact(x.total_tokens || 0)}</b> tok · ${((x.elapsed_ms || 0) / 1000).toFixed(1)}s</span>
-      </div>`;
-    }).join('') || '<div class="empty">暂无请求记录</div>';
+      const html = `<span class="t">${esc(recentStamp(x.iso))}</span>
+        <span class="m"><b>${esc(x.model || '')}</b> → ${esc(nm.length > 16 ? nm.slice(0, 16) + '…' : nm)}${tag}</span>
+        <span class="r"><b>${fmtCompact(x.total_tokens || 0)}</b> tok · ${((x.elapsed_ms || 0) / 1000).toFixed(1)}s</span>`;
+      let node = previous.get(html)?.shift();
+      if(!node){
+        node = document.createElement('div');
+        node.className = 'recent-item';
+        node.innerHTML = html;
+        recentListKeys.set(node, html);
+      }
+      if(list.children[i] !== node) list.insertBefore(node, list.children[i] || null);
+      displayed.add(node);
+    });
+    for(const node of Array.from(list.children)){
+      if(!displayed.has(node)) list.removeChild(node);
+    }
   }catch(e){ console.error('recent failed', e); }
-}
-
-/* 轮询类请求的窗口上界量化：服务端 _json_cached 只在「调用前后的缓存条目一模一样」
- * 时才发 ETag（wb_proxy.py:16872），而缓存键里含 until。until 每轮都取 now()，
- * 缓存键每轮都是新的 → before 永远是 None → 304 一次都命不中外加整份重传。
- * 量化到服务端聚合缓存自己的 TTL（wb_proxy.py:1778 _STATS_TTL = 15s）：同一个 15 秒
- * 桶内 URL 逐字相同，第 2、3 轮直接吃 304；代价是最多 15 秒的新鲜度延迟。
- * 只有轮询走这条（loadRange(true)），用户手点区间仍用精确 now。 */
-const POLL_UNTIL_BUCKET = 15;
-function pollUntil(){
-  return Math.floor(Math.floor(Date.now() / 1000) / POLL_UNTIL_BUCKET) * POLL_UNTIL_BUCKET;
-}
-function rangeParams(range, untilAt){
-  // since 必须和 until 用同一个时间点推导，否则 since 仍在逐秒变化，URL 照样每轮都新。
-  const now = (untilAt === undefined || untilAt === null) ? Math.floor(Date.now() / 1000) : untilAt;
-  if (range === 'd3')  return `range=custom&since=${now - 3*86400}&until=${now}`;
-  if (range === 'd30') return `range=custom&since=${now - 30*86400}&until=${now}`;
-  if (range === 'all') return `range=custom&since=${now - 365*86400}&until=${now}`;
-  return `range=${range}`;
 }
 
 /* ============================================================
@@ -22772,80 +23627,102 @@ if(typeof MutationObserver !== 'undefined'){
 /* ============================================================
    加载与渲染
    ============================================================ */
-/* 区间/轮询的代次。与 refreshInner 里 REFRESH_GEN 同一套理由：取数期间又发起了更新
- * 的一轮（刚切了区间、或轮询撞上点击），这批结果已经过期，直接丢掉——否则慢的那一轮
- * 晚到，会把上一个区间的数字画到新区间的标题下面（实测有 1.2~1.8 秒的错位窗口）。 */
 let WBA_GEN = 0;
-const WBA_PENDING = new Map();
-async function loadRange(polled){
-  const range = state.range;
-  if(polled && WBA_PENDING.has(range)) return;
-  WBA_PENDING.set(range, (WBA_PENDING.get(range) || 0) + 1);
-  const gen = ++WBA_GEN;
-  const untilAt = polled ? pollUntil() : null;
-  $('kpis').style.opacity = .55;
-  const rp = rangeParams(state.range, untilAt);
-  try{
-    const [analytics, series, prev] = await Promise.all([
-      api(`/usage/analytics?realm=all&${rp}`),
-      api(`/usage/timeseries?realm=all&${rp}`),
-      loadPrevSummary(untilAt),
-    ]);
-    if (gen !== WBA_GEN) return;
-    state.analytics = analytics;
-    state.series = series;
-    prevSummary = prev;
-  } catch(e){
-    if (gen !== WBA_GEN) return;
-    console.error('load range failed', e);
-  } finally {
-    const remaining = WBA_PENDING.get(range) - 1;
-    if(remaining) WBA_PENDING.set(range, remaining);
-    else WBA_PENDING.delete(range);
+let boardQuery = '';
+let boardInFlight = false;
+let boardForcePending = false;
+let boardPending = true;
+let boardClosed = false;
+let boardRevision = '';
+let boardMatrixRevision = '';
+let boardPreviewRevision = '';
+let boardRecentAt = 0;
+let boardRecentInFlight = false;
+let boardDetailsAt = 0;
+
+function usageBoardQuery(){
+  const query = new URLSearchParams({range: state.range});
+  if(state.range === 'custom'){
+    for (const [key, id] of [['since','rangeCustomSince'], ['until','rangeCustomUntil']]){
+      const stamp = fromLocalInputValue($(id).value);
+      if(stamp !== null) query.set(key, stamp);
+    }
   }
-  $('kpis').style.opacity = 1;
-  renderKpis();
-  renderSeriesMeta();
-  drawSeries();
-  drawSparks();
-  renderDim();
-  loadRecent();
+  return query;
 }
 
-async function loadStatic(){
-  try{ state.perf = await api('/usage/perf'); } catch(e){ console.error(e); }
-  await loadHeat();
-  renderPerfFold();
-  // 剩余用量 / 积分扣减 / 积分获取历史：原版区块的数据管道原来挂在旧 loadAnalytics 上，
-  // 页面换成新版后这里补回调用（展开对应折叠区时还会再刷一次）。
-  try{ loadRemainingUsage(); }catch(e){}
-  try{ loadCreditHistory(); }catch(e){}
-  try{ loadCreditGrants(); }catch(e){}
-}
-
-/* 热力图按「本地日」取数：since/until 都钉在本地午夜，缓存键一整天不变；
- * until 取到明天 0 点，今天新产生的用量也能落进今天的格子。只在进页面、
- * 跨天或距上次取数满 60 秒时重取——以前只在进页面取一次，跨过午夜后页面
- * 还停在旧的一天（issue #541）。 */
-let heatFetchedAt = 0, heatFetchedDay = '', heatLoading = false;
-async function loadHeat(){
-  if (heatLoading) return;
-  heatLoading = true;
-  const nowMs = Date.now();
-  const midnight = new Date(nowMs); midnight.setHours(0,0,0,0);
-  const since = Math.floor(midnight.getTime()/1000) - 366*86400;
-  const until = Math.floor(midnight.getTime()/1000) + 86400;
-  heatFetchedAt = nowMs/1000;
-  heatFetchedDay = fmtDate(nowMs/1000);
+async function loadRange(polled, force){
+  const query = usageBoardQuery();
+  const queryKey = query.toString();
+  if(queryKey !== boardQuery){
+    boardQuery = queryKey;
+    boardRevision = boardMatrixRevision = '';
+    boardPreviewRevision = '';
+    boardPending = true;
+    boardClosed = query.has('until') && Math.max(
+      Number(query.get('since')), Number(query.get('until'))) <= Date.now() / 1000;
+    WBA_GEN++;
+  }
+  if(force) boardForcePending = true;
+  if(boardInFlight || (polled && boardClosed && !boardPending && !boardForcePending)) return;
+  const gen = WBA_GEN;
+  const status = $('usageBoardStatus');
+  boardInFlight = true;
+  query.set('rev', boardRevision);
+  query.set('matrix_rev', boardMatrixRevision);
+  query.set('preview_rev', boardPreviewRevision);
+  if(boardForcePending){
+    query.set('refresh', '1');
+    boardForcePending = false;
+  }
   try{
-    state.heat = await api(`/usage/timeseries?realm=all&range=custom&since=${since}&until=${until}&bucket_seconds=86400`);
-  } catch(e){ console.error('heat failed', e); }
-  heatLoading = false;
-  buildHeatGrid(state.heat);
-}
-function maybeLoadHeat(){
-  const now = Date.now()/1000;
-  if (fmtDate(now) !== heatFetchedDay || now - heatFetchedAt >= 60) loadHeat();
+    const result = await api('/usage/board?' + query, {});
+    if(gen !== WBA_GEN) return;
+    boardPending = result.pending || (!result.revision && !result.error);
+    $('kpis').style.opacity = result.revision || result.preview_revision ? 1 : .55;
+    if(result.error){
+      status.textContent = result.revision ? '统计更新失败，显示上次结果' : '用量统计失败，请刷新重试';
+    } else if(result.pending && !result.revision){
+      const pct = result.total_bytes
+        ? Math.min(100, Math.floor(100 * result.indexed_bytes / result.total_bytes))
+        : null;
+      status.textContent = (result.preview_revision ? '今日已更新，累计与历史计算中' : '正在后台计算用量')
+        + (pct === null ? '' : ' · ' + pct + '%');
+    } else if(result.updated_at){
+      status.textContent = '统计更新于 ' + new Date(result.updated_at * 1000).toLocaleTimeString();
+    }
+    if(result.matrix){
+      state.perf = result.matrix.perf;
+      state.heat = result.matrix.heat;
+      prevSummary = result.matrix.previous;
+      renderPerfFold();
+      buildHeatGrid(state.heat);
+      boardMatrixRevision = result.matrix_revision;
+    }
+    if(result.core){
+      state.analytics = result.core.analytics;
+      state.analytics.updated_at = result.updated_at;
+      state.series = result.core.series;
+      boardRevision = result.revision;
+      renderSeriesMeta();
+      drawSeries();
+      drawSparks();
+      renderDim();
+    }
+    if(result.preview){
+      state.analytics = result.preview;
+      state.series = null;
+      state.perf = null;
+      prevSummary = null;
+      boardPreviewRevision = result.preview_revision;
+    }
+    if(result.core || result.matrix || result.preview) renderKpis();
+  }catch(e){
+    if(gen === WBA_GEN) status.textContent = '无法读取用量统计';
+  }finally{
+    boardInFlight = false;
+    if(gen !== WBA_GEN || boardForcePending) loadRange(false);
+  }
 }
 
 /* ---------------- KPI ---------------- */
@@ -22918,7 +23795,8 @@ function renderKpis(){
   $('kCost').innerHTML = `<span style="color:var(--red)" ${w.cost_cny != null ? `data-tip="${fullNum(w.cost_cny, 4)} 元"` : ''}>${fmtCostCny(w.cost_cny)}</span>`;
   $('kCostSub').innerHTML = usd != null ? `<span style="color:var(--green)">${usd.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2})}</span> · 积分消耗 ${numSpan(w.credit, 1)}` : '—';
 
-  $('pageSub').textContent = `区间 ${fmtCompact(w.total_tokens)} tokens · ${fmtCompact(w.requests)} 次请求 · 更新于 ${new Date().toLocaleTimeString('zh-CN', {hour12:false})}`;
+  const updated = a.updated_at ? new Date(a.updated_at * 1000) : new Date();
+  $('pageSub').textContent = `区间 ${fmtCompact(w.total_tokens)} tokens · ${fmtCompact(w.requests)} 次请求 · 更新于 ${updated.toLocaleTimeString('zh-CN', {hour12:false})}`;
 
   // B 版：环比徽章
   const selfCache = w.prompt_tokens ? (w.cached_tokens || 0) / w.prompt_tokens * 100 : null;
@@ -23442,11 +24320,15 @@ $('rangeSeg').addEventListener('click', ev => {
   const btn = ev.target.closest('button'); if (!btn) return;
   [...$('rangeSeg').children].forEach(b => b.classList.toggle('on', b === btn));
   state.range = btn.dataset.range;
+  $('rangeCustomBox').hidden = state.range !== 'custom';
+  if(state.range === 'custom') prefillCustomRange();
   // 新区间的数字还没到：先把页头的旧读数清成占位，别让「全部」标题下面继续挂着本月的
   // 数字（那一段是页头最长的一行，误读代价最大）。取回后 renderKpis() 会重新写满。
   $('pageSub').textContent = '—';
   loadRange();
 });
+$('rangeCustomBox').addEventListener('change', () => loadRange(false));
+$('usageBoardRefresh').addEventListener('click', () => loadRange(false, true));
 $('metricSeg').addEventListener('click', ev => {
   const btn = ev.target.closest('button'); if (!btn) return;
   [...$('metricSeg').children].forEach(b => b.classList.toggle('on', b === btn));
@@ -23538,15 +24420,25 @@ function syncOldRange(){
 /* ============================================================
    启动与对外接线
    ============================================================ */
-let wbaStarted = false;
 function wbaTick(){
-  if (!wbaStarted){ wbaStarted = true; loadStatic(); }
-  maybeLoadHeat();
-  loadRange(true);   // 轮询：窗口上界按 15 秒桶量化，连续两轮同桶才有可能吃 304
+  if(currentMainTab !== 'analytics' || document.hidden) return;
+  loadRange(true);
+  if(!boardRecentInFlight && Date.now() - boardRecentAt >= 5000){
+    boardRecentAt = Date.now();
+    boardRecentInFlight = true;
+    loadRecent().finally(() => { boardRecentInFlight = false; });
+  }
+  if(Date.now() - boardDetailsAt >= 30000){
+    boardDetailsAt = Date.now();
+    if($('foldRemainBox').open) loadRemainingUsage();
+    if($('foldGrantsBox').open) loadCreditGrants();
+    if($('foldCreditsBox').open){ syncOldRange(); loadCreditHistory(); }
+  }
 }
-window.loadAnalytics = wbaTick;            /* 面板 5s 轮询 / 切页 / 回前台统一入口 */
-window.loadAnalyticsMatrix = function(){}; /* 旧性能矩阵已并入本页（性能分位折叠区） */
-window.wbaLoad = wbaTick;                  /* 调试入口 */
+window.loadAnalytics = wbaTick;
+window.loadAnalyticsMatrix = function(){};
+window.wbaLoad = wbaTick;
+window.wbaRenderCost = function(){ renderKpis(); renderDim(); };
 /* 面板每 5 秒扫描全页表格并自动接排序（applyAllTableSorts）：把本页表格登记进
    禁排名单，避免表头被挂上排序箭头、破坏紧凑版式。剩余用量 / 积分扣减 / 积分
    获取三张表沿用原版的排序接线（自带 id 且已登记），不在此列。 */
@@ -24357,7 +25249,7 @@ if (typeof SORT_DENY_TABLES !== 'undefined' && SORT_DENY_TABLES && SORT_DENY_TAB
   'use strict';
 
   var NEXT = !!window.__NEXT_UI__;
-  var MORE_TABS = ['tasks', 'agents', 'media', 'settings', 'logs'];
+  var MORE_TABS = ['api', 'tasks', 'agents', 'media', 'settings', 'logs'];
 
   function nextCurrentTab(){
     var page = document.querySelector('.main-page.active');
@@ -24366,6 +25258,7 @@ if (typeof SORT_DENY_TABLES !== 'undefined' && SORT_DENY_TABLES && SORT_DENY_TAB
     if(id === 'pageOverview') return 'overview';
     if(id === 'pageGateway') return 'gateway';
     if(id === 'pageAccounts') return 'accounts';
+    if(id === 'pageApi') return 'api';
     if(id === 'pageTasks') return 'tasks';
     if(id === 'pageAnalytics') return 'analytics';
     if(id === 'pageAgents') return 'agents';
@@ -24385,9 +25278,10 @@ if (typeof SORT_DENY_TABLES !== 'undefined' && SORT_DENY_TABLES && SORT_DENY_TAB
   var NEXT_META = {
     overview: { title: '总览', desc: '出口、账号健康和最近请求一屏看完。' },
     gateway: { title: '网关', desc: '模型目录、能力、思考档位与在售倍率。' },
-    accounts: { title: '账号', desc: 'WorkBuddy 与 CodeArts 账号、积分和签到记录。' },
+    accounts: { title: '账号', desc: 'WorkBuddy 与 CodeArts 账号、积分与出口绑定。' },
+    api: { title: '接口', desc: '管理外部 API Key、调用记录和账号接口文档。' },
     analytics: { title: '用量', desc: 'Token、请求、缓存、成本和剩余额度。' },
-    tasks: { title: '自动化', desc: '后台调度器、一次性 / 活动福利和每日任务。' },
+    tasks: { title: '自动化任务', desc: '后台调度器、每日任务、一次性福利与签到活跃记录。' },
     agents: { title: '智能体', desc: '把本机 AI 客户端一键指向当前网关。' },
     media: { title: '媒体', desc: '图片与视频生成任务、额度、价格和账号分配。' },
     settings: { title: '设置', desc: 'API Key、出口、模型、调度和系统选项。' },
@@ -24422,7 +25316,7 @@ if (typeof SORT_DENY_TABLES !== 'undefined' && SORT_DENY_TABLES && SORT_DENY_TAB
     try {
       if(typeof _hiddenPages !== 'undefined' && Array.isArray(_hiddenPages)) hidden = _hiddenPages;
     } catch(e){}
-    var order = ['overview', 'gateway', 'accounts', 'analytics', 'tasks', 'agents', 'media', 'settings', 'logs'];
+    var order = ['overview', 'gateway', 'accounts', 'api', 'analytics', 'tasks', 'agents', 'media', 'settings', 'logs'];
     var firstVisible = '';
     order.forEach(function(key){
       var off = hidden.indexOf(key) >= 0;

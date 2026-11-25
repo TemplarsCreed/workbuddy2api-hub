@@ -128,10 +128,33 @@ class TestLooseDoesNotOverreach(_Base):
                          "只有一个键值对的散文不该被当成计费头")
 
     def test_overlong_line_is_kept(self):
-        # 400 字符以上一律不认：这种行更像正文里的表格/日志片段，不是头部元数据
-        text = ("x-anthropic-billing-header: " + "prose without pairs " * 40
-                + "\n" + BODY)
-        self.assertEqual(self.loose(text), text, "超长行一律不动")
+        # 非计费头起头的 400 字符以上超长行（表格/日志片段）仍然不动
+        text = ("Log table row: " + "prose without pairs " * 40
+                + " cch=abc123; cc_version=2.0.1\n" + BODY)
+        self.assertEqual(self.loose(text), text, "非计费头起头的超长行一律不动")
+
+    def test_overlong_leading_billing_header_keeps_same_line_prose(self):
+        # Issue #25: 子代理提示词与计费头被拼到首行超过 400 字符时，宽松模式只剥离
+        # 计费头前缀与 cc_*/cch 键值，保留同行正文；严格模式仍保持原样。
+        long_prompt = ("You are a helpful AI assistant. Given the user's message, "
+                       + "analyze the task carefully. " * 14).strip()
+        self.assertGreater(len(long_prompt), 400)
+        bare = "x-anthropic-billing-hdr: " + long_prompt + "\n" + BODY
+        self.assertEqual(self.strict(bare), bare)
+        self.assertEqual(self.loose(bare), long_prompt + "\n" + BODY)
+
+        with_pairs = ("x-anthropic-billing-header: cc_version=2.1.37.abc; "
+                      "cc_entrypoint=cli; cch=deadbeef; " + long_prompt + "\n" + BODY)
+        self.assertEqual(self.strict(with_pairs), with_pairs)
+        self.assertEqual(self.loose(with_pairs), long_prompt + "\n" + BODY)
+
+    def test_overlong_leading_billing_metadata_only_strips_continuations(self):
+        long_kv = " ".join(f"cc_k{i}=val{i};" for i in range(40))
+        self.assertGreater(len(long_kv), 400)
+        text = ("x-anthropic-billing-header: " + long_kv + "\n"
+                "cch=abc123\n"
+                + BODY)
+        self.assertEqual(self.loose(text), BODY)
 
     def test_two_kv_tokens_mid_prose_is_the_known_edge(self):
         """已知边界：≥2 个键值对的散文行会被宽松判定命中——所以默认关闭。"""

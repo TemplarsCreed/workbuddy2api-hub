@@ -296,6 +296,15 @@ class OpenWrtPackageTests(unittest.TestCase):
         self.assertIn('[ -z "$(BRIDGE_BINS)" ]', makefile)
         self.assertIn("$(INSTALL_BIN) $(BRIDGE_BINS)", makefile)
 
+    def test_packages_include_the_webgateway_subpackage(self):
+        makefile = read(MAKEFILE)
+        self.assertIn("$(INSTALL_DATA) $(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/*.py", makefile)
+        self.assertIn("$(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/protocols/*.py", makefile)
+        self.assertIn("$(PKG_BUILD_DIR)/usr/lib/workbuddy2api/wb_webgateway/providers/*.py", makefile)
+        for path in (BUILD_IPK, BUILD_APK):
+            text = read(path)
+            self.assertIn('"$APP_SRC/wb_webgateway"', text)
+
     def test_both_packers_have_an_opt_in_bridge_mode(self):
         for path in (BUILD_IPK, BUILD_APK):
             text = read(path)

@@ -34,6 +34,14 @@ function section(id){
 
 const daily = section('sectionDailyTasks');
 const growth = section('sectionGrowthTasks');
+const tasksPageStart = html.indexOf('<div id="pageTasks"');
+const tasksPageEnd = html.indexOf('</div><!-- /pageTasks -->', tasksPageStart);
+assert.ok(tasksPageStart >= 0 && tasksPageEnd > tasksPageStart, '缺少 #pageTasks 容器');
+const tasksPage = html.slice(tasksPageStart, tasksPageEnd);
+const accountsPageStart = html.indexOf('<div id="pageAccounts"');
+const accountsPageEnd = html.indexOf('</div><!-- /pageAccounts -->', accountsPageStart);
+assert.ok(accountsPageStart >= 0 && accountsPageEnd > accountsPageStart, '缺少 #pageAccounts 容器');
+const accountsPage = html.slice(accountsPageStart, accountsPageEnd);
 
 check('每日任务区块标题是「每日任务」',
   /<h2 style="margin:0">每日任务<\/h2>/.test(daily));
@@ -59,6 +67,22 @@ check('每日任务区块保留国际版与国内版状态卡',
   daily.includes('id="cnTodayCheckinState"') &&
   daily.includes('id="stkDays"') &&
   daily.includes('id="catState"'));
+check('每日任务区块豁免 win-capped 限高并取消内部滚动与吸顶首行',
+  /body\.win-capped \.main-page :is\([^)]*#sectionDailyTasks[^)]*\)\{max-height:none;overflow:visible\}/.test(html) &&
+  /body\.win-capped \.main-page #sectionDailyTasks\{padding-top:18px\}/.test(html) &&
+  /body\.win-capped \.main-page #sectionDailyTasks>:first-child\{position:static;background:transparent;padding-top:0;padding-bottom:0;margin-bottom:14px!important\}/.test(html));
+check('每日任务区块拍平嵌套边框容器',
+  !daily.includes('border:1px solid var(--line);border-radius:12px') &&
+  !daily.includes('border:1px solid var(--line);border-radius:10px') &&
+  daily.includes('border-top:1px solid var(--line);padding-top:16px'));
+check('国内版账号选择器收进「国内版每日福利」标题栏内',
+  daily.indexOf('国内版每日福利') > 0 &&
+  daily.indexOf('id="cnCheckinAcctPicker"') > daily.indexOf('国内版每日福利') &&
+  daily.indexOf('id="cnCheckinAcctPicker"') < daily.indexOf('id="btnPageCheckin"'));
+check('「签到与活跃记录」已移入自动化页底部',
+  tasksPage.includes('id="workbuddyActivitySection"') &&
+  tasksPage.indexOf('id="workbuddyActivitySection"') > tasksPage.indexOf('id="sectionGrowthTasks"') &&
+  !accountsPage.includes('id="workbuddyActivitySection"'));
 
 check('一次性区块标题是「一次性 / 活动福利」',
   /<h2 style="margin:0">一次性 \/ 活动福利<\/h2>/.test(growth));

@@ -33,14 +33,22 @@ assert.ok(/<div id="pageAccounts" class="main-page">/.test(html),
 const pageGatewayAt = html.indexOf('<div id="pageGateway"');
 const pageAccountsAt = html.indexOf('<div id="pageAccounts"');
 const pageAnalyticsAt = html.indexOf('<div id="pageAnalytics"');
+const pageTasksAt = html.indexOf('<div id="pageTasks"');
+const pageMediaAt = html.indexOf('<div id="pageMedia"');
 const accountsBodyAt = html.indexOf('id="accountsBody"');
 const disabledListAt = html.indexOf('id="disabledList"');
+const activitySectionAt = html.indexOf('<section id="workbuddyActivitySection"');
 assert.ok(pageGatewayAt > 0 && pageAccountsAt > pageGatewayAt && pageAnalyticsAt > pageAccountsAt,
   '页面顺序应为 gateway → accounts → analytics');
 assert.ok(accountsBodyAt > pageAccountsAt && accountsBodyAt < pageAnalyticsAt,
   '账号列表必须在账号页里');
 assert.ok(disabledListAt > pageAccountsAt && disabledListAt < pageAnalyticsAt,
   '「当前禁用」总览必须在账号页里');
+assert.ok(pageTasksAt > 0 && pageMediaAt > pageTasksAt &&
+  activitySectionAt > pageTasksAt && activitySectionAt < pageMediaAt,
+  '「签到与活跃记录」应位于自动化页 #pageTasks 里');
+assert.ok(!html.slice(pageAccountsAt, pageTasksAt).includes('id="workbuddyActivitySection"'),
+  '账号页不该再留着「签到与活跃记录」');
 assert.ok(!html.slice(pageGatewayAt, pageAccountsAt).includes('accountsBody'),
   '网关页不该再留着账号列表');
 assert.ok(!html.slice(pageGatewayAt, pageAccountsAt).includes('disabledList'),
@@ -56,11 +64,9 @@ assert.deepStrictEqual(names(headTabs[1]), names(mainTabs[1]),
   'head 的 TABS 与主脚本的 MAIN_TABS 必须一致');
 assert.ok(names(mainTabs[1]).includes('accounts'), 'accounts 必须在主标签清单里');
 
-// 切到账号页要顺手把签到记录拉起来；开关关掉（默认）时账号区就在
-// 「网关与账号」页，切到网关页同样要拉。
-assert.ok(script.includes("if(tab === 'accounts' || (!_accountsSeparateTab && tab === 'overview')){ loadActivityBoard(); }")
-  || script.includes("if(tab === 'accounts' || (!_accountsSeparateTab && tab === 'gateway')){ loadActivityBoard(); }"),
-  '切到账号页（或合并后的网关/总览页）应触发 loadActivityBoard');
+// 签到与活跃记录在自动化页里，切到自动化页时要顺手把它拉起来。
+assert.ok(script.includes("if(tab === 'tasks'){ loadGrowthTasks(); loadActivityBoard(); }"),
+  '切到自动化页应触发 loadActivityBoard');
 
 // 签到记录区块的骨架
 for(const id of ['activityRange', 'activityTask', 'activityResult', 'activityAccount',
@@ -183,6 +189,7 @@ try {
   api = new Function(script + `
     return {
       loadActivityBoard: loadActivityBoard,
+      refreshActivityBoardOnTasks: refreshActivityBoardOnTasks,
       renderActivityAccounts: renderActivityAccounts,
       switchMainTab: switchMainTab,
       applyAccountsTabLayout: applyAccountsTabLayout,
@@ -474,11 +481,32 @@ function check(label, ok, detail){
   check('失败后刷新按钮恢复可用', el('btnActivityRefresh').disabled === false);
   FETCH_FAILS = false;
 
-  // 2i. 切到账号页会拉起记录
+  // 2i. 切到自动化页会拉起记录，且在自动化页执行完单次打卡后仅在首页尺寸时自动刷新
   REQUESTS = [];
-  api.switchMainTab('accounts');
-  check('切到账号页触发一次读取',
+  api.switchMainTab('tasks');
+  await new Promise(r => setTimeout(r, 0));
+  check('切到自动化页触发一次读取',
     REQUESTS.some(u => u.indexOf('/activity/history') === 0), JSON.stringify(REQUESTS));
+
+  REQUESTS = [];
+  api.refreshActivityBoardOnTasks();
+  await new Promise(r => setTimeout(r, 0));
+  check('停留在自动化页且未翻页时会自动刷新记录',
+    REQUESTS.some(u => u.indexOf('/activity/history') === 0), JSON.stringify(REQUESTS));
+
+  REQUESTS = [];
+  await api.loadActivityBoard(false, true);
+  REQUESTS = [];
+  api.refreshActivityBoardOnTasks();
+  check('展开加载更多后不自动重置回第一页',
+    !REQUESTS.some(u => u.indexOf('/activity/history') === 0), JSON.stringify(REQUESTS));
+
+  api.switchMainTab('gateway');
+  await api.loadActivityBoard();
+  REQUESTS = [];
+  api.refreshActivityBoardOnTasks();
+  check('不在自动化页时不触发活动记录刷新',
+    !REQUESTS.some(u => u.indexOf('/activity/history') === 0), JSON.stringify(REQUESTS));
 
   // 2j. 开关：区块在两页之间搬家，页签名与「账号」页签的显隐跟着走。
   // 此段验证用户显式选择经典布局时的文案；默认控制台另行验证。

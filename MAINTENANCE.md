@@ -1,14 +1,17 @@
 # 自维护说明（本 fork 专用）
 
-上游 `ardeyouxipianyi/workbuddy2api-hub` 曾在 **2026-11-06 宣布停止维护**（同日最后一个版本 v2.0.0），
-**2026-11-09 恢复更新**（当前 v2.0.6，tag `v2.0.2`–`v2.0.6`）。本 fork（`TemplarsCreed/workbuddy2api-hub`）以 v2.0.0 为基线自维护，
-并定期把上游改动合并进来；自用线版本号独立走 2.x（见下方「当前自用版本」）。
+上游现为 `niyouqianma/workbuddy2api-hub`：原 `ardeyouxipianyi/workbuddy2api-hub` 已于 2026-11 删除（404），
+项目整体迁移，代码血统一致（迁移前的 v2.1.2 是两个仓库的共同祖先）。本 fork（`TemplarsCreed/workbuddy2api-hub`）
+以 v2.0.0 为基线自维护，并定期把上游改动合并进来；自用线版本号独立走 2.x（见下方「当前自用版本」）。
+
+**取上游务必带 `--no-tags`**：上游已占用 `v2.1.3`–`v2.2.3`，与本 fork 自用线的同名 tag 不同 SHA，
+`git fetch --tags` 会把冲突 tag 拉进本地并污染发版门禁。
 
 | 项 | 值 |
 | --- | --- |
 | 基线提交 | `d2343964` `merge-release-v2.0.0`（2026-11-06T07:51:04Z） |
 | 基线 tag | `baseline-v2.0.0`（已推到 origin） |
-| remote | `origin` = 本 fork；`upstream` = 上游（只读参照，2026-11-09 起恢复有新提交） |
+| remote | `origin` = 本 fork；上游 = `https://github.com/niyouqianma/workbuddy2api-hub`（只读参照，活跃） |
 | 许可证 | MIT — 可自由修改/分发，保留原版权声明即可 |
 
 ## 改了什么，一眼看出来
@@ -24,7 +27,7 @@ git diff baseline-v2.0.0 --stat                  # 自有改动范围
 ## 改动前必读
 
 - `AGENTS.md` → 指向 `CONTRIBUTING.md` 的「AI / 智能体贡献者硬性规则」，改代码前先读一遍，避免踩它列的坑。
-- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.2.4**。改漏一处，`release.yml` 的 version job 会直接红。
+- 版本号三处必须一致（发版门禁硬性要求）：`wb_proxy.py` 的 `"version"`、同文件下方 `server_version = "wb-proxy/x.y.z"`、`wrt/openwrt/workbuddy2api/Makefile` 的 `PKG_VERSION:=x.y.z`；且 tag 名必须等于源码版本。当前自用版本 **v2.3.0**。改漏一处，`release.yml` 的 version job 会直接红。
 - README 顶部是「自用维护分支」口径（无兼容承诺），不要把上游的「停止维护 / 赞助商 / 官方群聊」加回来；上游的「凭证安全」提示保留。
 - **合并上游**：`git fetch upstream --tags && git merge upstream/main`。冲突通常在 4 处：`README.md`（顶部声明与徽章）、`docs/CHANGELOG.md`（两边都在顶部加版本段）、`wb_proxy.py`（版本号）、`wrt/openwrt/workbuddy2api/Makefile`（`PKG_VERSION`）。解决时版本号统一到自用线（比上游大），CHANGELOG 保留双方段落、上游重名的 `v2.0.1` 标成「上游」；合并后必须重跑全量测试与面板冒烟，因为 `dashboard.html` 是自动合并的，冲突不会在那里报出来。
 - `dashboard.html` 是 1.2MB 单文件前端，`wb_proxy.py` 是 1.2MB 主服务单文件；两者都是「大文件里改小地方」，编辑时用精确锚点，不要整文件重写。

@@ -581,11 +581,10 @@ class CnCheckinTests(unittest.TestCase):
 
 
     def test_daily_chat_model_falls_back_when_preferred_is_cooling(self):
-        acc = wb_accounts.Account({"uid": "u-fallback", "access_token": "t-fb", "realm": "intl"})
+        acc = wb_accounts.Account({"uid": "u-fallback", "accessToken": "t-fb", "realm": "intl"})
         acc.model_cooldowns["deepseek-v4.1-flash"] = time.time() + 600
-        picked = acc.daily_chat_model()
-        self.assertNotEqual(picked, "deepseek-v4.1-flash")
-        self.assertIn(picked, ["hy3", "hy4free"])
+        with mock.patch("wb_proxy.free_model_candidates", return_value=["hy4free", "hy3"]):
+            self.assertEqual(acc.daily_chat_model(), "hy4free")
 
     def test_prefer_flash_switch_defaults_on_and_round_trips(self):
         directory = os.path.join(_TMP.name, "prefer-flash-setting")
